@@ -21,6 +21,7 @@ public class CruisingState implements AltitudeState {
 
     @Override
     public void generateAltitude() {
+        System.out.println("Altitude: Cruising");
         TimerTask cruisingTask = new TimerTask() {
             @Override
             public void run() {

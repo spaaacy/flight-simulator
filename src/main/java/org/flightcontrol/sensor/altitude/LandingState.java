@@ -17,6 +17,7 @@ public class LandingState implements AltitudeState {
     @Override
     public void generateAltitude() {
 
+        System.out.println("Altitude: Landing");
         TimerTask landingTask = new TimerTask() {
             @Override
             public void run() {
@@ -29,6 +30,7 @@ public class LandingState implements AltitudeState {
                 }
             }
         };
+
 
         timer.scheduleAtFixedRate(landingTask, 0L, UPDATE_RATE);
 

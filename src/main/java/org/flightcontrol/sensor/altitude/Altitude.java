@@ -1,10 +1,12 @@
 package org.flightcontrol.sensor.altitude;
 
+import org.flightcontrol.flight.Observer;
+
 import java.util.concurrent.Phaser;
 
-public class Altitude implements Runnable {
+public class Altitude implements Runnable, Observer {
 
-    static final Long UPDATE_RATE = 5000L;
+    static final Long UPDATE_RATE = 1000L;
     static final Integer CRUISING_ALTITUDE = 11000;
     static final Integer TAKEOFF_LANDING_INCREMENT = 500;
 
@@ -31,8 +33,15 @@ public class Altitude implements Runnable {
     public void changeState(AltitudeState newState) {
         this.altitudeState = newState;
         phaser.arrive();
+        System.out.println("Phaser: " + phaser.getPhase());
         altitudeState.generateAltitude();
     }
 
+    @Override
+    public void update(int phaseValue) {
+        if (phaseValue == 3) {
+            changeState(new LandingState(this));
+        }
+    }
 
 }
