@@ -1,4 +1,4 @@
-package org.flightcontrol.sensor;
+package org.flightcontrol.sensor.altitude;
 
 import java.util.TimerTask;
 
