@@ -19,7 +19,7 @@ public class LandingState extends TimerTask implements AltitudeState  {
     public void run() {
         if (altitude.currentAltitude > 0) {
 
-            int minPossibleNextValue = altitude.currentAltitude + INCREMENT_TAKEOFF_LANDING + MAX_FLUCTUATION_TAKEOFF_LANDING;
+            int minPossibleNextValue = altitude.currentAltitude - INCREMENT_TAKEOFF_LANDING - MAX_FLUCTUATION_TAKEOFF_LANDING;
             int largestPossibleDecrement = INCREMENT_TAKEOFF_LANDING + MAX_FLUCTUATION_TAKEOFF_LANDING;
             if (minPossibleNextValue > largestPossibleDecrement) {
                 Integer fluctuation = (int)(Math.random() * MAX_FLUCTUATION_TAKEOFF_LANDING * 2) - MAX_FLUCTUATION_TAKEOFF_LANDING;
@@ -31,6 +31,7 @@ public class LandingState extends TimerTask implements AltitudeState  {
             System.out.println("Altitude: " + altitude.currentAltitude);
         } else {
             altitude.phaser.arriveAndDeregister();
+            altitude.timer.cancel();
             timer.cancel();
         }
     }
