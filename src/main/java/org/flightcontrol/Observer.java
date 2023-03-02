@@ -1,4 +1,4 @@
-package org.flightcontrol.flight;
+package org.flightcontrol;
 
 public interface Observer {
 

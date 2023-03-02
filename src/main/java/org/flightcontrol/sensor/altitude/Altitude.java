@@ -1,14 +1,15 @@
 package org.flightcontrol.sensor.altitude;
 
-import org.flightcontrol.flight.Observer;
+import org.flightcontrol.Observer;
 
 import java.util.LinkedList;
 import java.util.concurrent.Phaser;
 
 public class Altitude implements Runnable, Observer {
 
-    static final Long UPDATE_RATE = 300L;
-    static final Integer CRUISING_ALTITUDE = 11000;
+    public static final Integer CRUISING_ALTITUDE = 11000;
+    public static final Integer MAX_ALTITUDE = 12000;
+    public static final Integer MIN_ALTITUDE = 10000;
     static final Integer TAKEOFF_LANDING_INCREMENT = 500;
 
 
@@ -54,5 +55,13 @@ public class Altitude implements Runnable, Observer {
 
     public AltitudeState getAltitudeState() {
         return altitudeState;
+    }
+
+    public Integer getCurrentAltitude() {
+        return currentAltitude;
+    }
+
+    public void setCurrentAltitude(Integer currentAltitude) {
+        this.currentAltitude = currentAltitude;
     }
 }

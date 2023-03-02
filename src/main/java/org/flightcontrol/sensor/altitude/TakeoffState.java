@@ -3,6 +3,7 @@ package org.flightcontrol.sensor.altitude;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static org.flightcontrol.flight.Flight.TICK_RATE;
 import static org.flightcontrol.sensor.altitude.Altitude.*;
 
 public class TakeoffState implements AltitudeState {
@@ -30,7 +31,7 @@ public class TakeoffState implements AltitudeState {
             }
         };
 
-        timer.scheduleAtFixedRate(takeoffTask, 0L, UPDATE_RATE);
+        timer.scheduleAtFixedRate(takeoffTask, 0L, TICK_RATE);
 
     }
 

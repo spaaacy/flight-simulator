@@ -2,10 +2,9 @@ package org.flightcontrol.sensor.altitude;
 
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.Phaser;
 
+import static org.flightcontrol.flight.Flight.TICK_RATE;
 import static org.flightcontrol.sensor.altitude.Altitude.CRUISING_ALTITUDE;
-import static org.flightcontrol.sensor.altitude.Altitude.UPDATE_RATE;
 
 public class CruisingState implements AltitudeState {
 
@@ -22,6 +21,7 @@ public class CruisingState implements AltitudeState {
     @Override
     public void generateAltitude() {
 
+/*
         TimerTask cruisingTask = new TimerTask() {
             @Override
             public void run() {
@@ -30,10 +30,11 @@ public class CruisingState implements AltitudeState {
                 System.out.println("Altitude: " + altitude.currentAltitude);
             }
         };
+*/
 
 
         altitude.phaser.arriveAndAwaitAdvance(); // First arrive to go into phase 2: Cruising
-        timer.scheduleAtFixedRate(cruisingTask, 0L, UPDATE_RATE);
+//        timer.scheduleAtFixedRate(cruisingTask, 0L, TICK_RATE);
         altitude.phaser.arrive(); // Second arrive to give thumb-up for phase 3: Landing
 
 

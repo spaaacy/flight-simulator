@@ -1,7 +1,7 @@
 package org.flightcontrol.flight;
 
+import org.flightcontrol.Observer;
 import org.flightcontrol.sensor.altitude.Altitude;
-import org.flightcontrol.sensor.altitude.AltitudeState;
 import org.flightcontrol.sensor.altitude.CruisingState;
 
 import java.util.LinkedList;
@@ -9,6 +9,7 @@ import java.util.concurrent.Phaser;
 
 public class Flight implements Runnable, Observer {
 
+    public static final Long TICK_RATE = 300L;
     Phaser phaser = new Phaser(1);
     public Altitude altitude = new Altitude(phaser);
     LinkedList<Observer> observers = new LinkedList<>();
