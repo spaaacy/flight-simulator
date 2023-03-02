@@ -16,11 +16,11 @@ public class ControlSystem {
     public static void main(String[] args) {
 
         Scanner scanner = new Scanner(System.in);
-
+        Timer timer = new Timer();
         Flight flight = new Flight();
 
         ScheduledExecutorService flightControlSystem = Executors.newScheduledThreadPool(2);
-        flightControlSystem.schedule(flight, 500L, TimeUnit.MILLISECONDS);
+        flightControlSystem.schedule(flight, 500L, TimeUnit.MILLISECONDS); // Delay to prevent race-condition
         flightControlSystem.submit(flight.getAltitude());
 
         TimerTask landingTask = new TimerTask() {
@@ -30,7 +30,6 @@ public class ControlSystem {
                 flight.initiateLanding();
             }
         };
-        Timer timer = new Timer();
         timer.scheduleAtFixedRate(landingTask, 500L, 500L);
 
     }

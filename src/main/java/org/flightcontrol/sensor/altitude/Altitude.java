@@ -7,11 +7,8 @@ import java.util.concurrent.Phaser;
 
 public class Altitude implements Runnable, Observer {
 
-    public static final Integer CRUISING_ALTITUDE = 11000;
-    public static final Integer MAX_ALTITUDE = 12000;
-    public static final Integer MIN_ALTITUDE = 10000;
-    static final Integer TAKEOFF_LANDING_INCREMENT = 500;
-
+    static final Integer INCREMENT_TAKEOFF_LANDING = 500;
+    static final Integer MAX_FLUCTUATION_TAKEOFF_LANDING = 100;
 
     Phaser phaser;
     Integer currentAltitude = 0;
@@ -29,12 +26,12 @@ public class Altitude implements Runnable, Observer {
         changeState(new TakeoffState(this));
     }
 
-    public void changeState(AltitudeState newState) {
+    public void changeState(AltitudeState newAltitudeState) {
         if (altitudeState != null) {
             altitudeState.stopExecuting();
         }
 
-        this.altitudeState = newState;
+        this.altitudeState = newAltitudeState;
         for (Observer observer : observers) {
             observer.update();
         }

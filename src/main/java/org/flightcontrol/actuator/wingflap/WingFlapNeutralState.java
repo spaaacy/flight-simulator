@@ -3,12 +3,12 @@ package org.flightcontrol.actuator.wingflap;
 import org.flightcontrol.sensor.altitude.Altitude;
 
 import java.util.Timer;
-import java.util.TimerTask;
 
-import static org.flightcontrol.flight.Flight.TICK_RATE;
-import static org.flightcontrol.sensor.altitude.Altitude.CRUISING_ALTITUDE;
+import static org.flightcontrol.actuator.wingflap.WingFlap.*;
 
 public class WingFlapNeutralState implements WingFlapState {
+
+    static final String POSITION_NAME = "NEUTRAL";
 
     Altitude altitude;
     WingFlap wingFlap;
@@ -21,22 +21,20 @@ public class WingFlapNeutralState implements WingFlapState {
 
     @Override
     public void controlFlaps() {
+        wingFlap.direction = Direction.NEUTRAL;
 
-        System.out.println("WingFlap: Neutral");
+        Integer currentAltitude = altitude.getCurrentAltitude();
+        Integer fluctuation = (int) (Math.random() * MAX_FLUCTUATION_NEUTRAL * 2) - MAX_FLUCTUATION_NEUTRAL;
+        Integer newAltitude = currentAltitude + fluctuation;
+        altitude.setCurrentAltitude(newAltitude);
 
-        TimerTask flapsTask = new TimerTask() {
-            @Override
-            public void run() {
-                wingFlap.direction = Direction.NEUTRAL;
-                Integer fluctuation = (int)(Math.random() * 1000) - 500;
-                Integer newAltitude = CRUISING_ALTITUDE + fluctuation;
-                altitude.setCurrentAltitude(newAltitude);
-
-            }
-        };
-
-        timer.scheduleAtFixedRate(flapsTask, 0L, TICK_RATE);
-
+        // Plane flying too high
+        if (newAltitude - CRUISING_ALTITUDE > ACCEPTED_RANGE) {
+            wingFlap.setWingFlapState(new WingFlapUpState(wingFlap, altitude));
+        // Plane flying too low
+        } else if (newAltitude - CRUISING_ALTITUDE < -ACCEPTED_RANGE) {
+            wingFlap.setWingFlapState(new WingFlapDownState(wingFlap, altitude));
+        }
     }
 
     @Override
@@ -44,4 +42,8 @@ public class WingFlapNeutralState implements WingFlapState {
         timer.cancel();
     }
 
+    @Override
+    public String toString() {
+        return POSITION_NAME;
+    }
 }

@@ -3,10 +3,11 @@ package org.flightcontrol.sensor.altitude;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static org.flightcontrol.actuator.wingflap.WingFlap.CRUISING_ALTITUDE;
 import static org.flightcontrol.flight.Flight.TICK_RATE;
 import static org.flightcontrol.sensor.altitude.Altitude.*;
 
-public class TakeoffState implements AltitudeState {
+public class TakeoffState extends TimerTask implements AltitudeState {
 
     Altitude altitude;
     Timer timer = new Timer();
@@ -16,23 +17,21 @@ public class TakeoffState implements AltitudeState {
     }
 
     @Override
+    public void run() {
+        int maxPossibleNextValue = altitude.currentAltitude + INCREMENT_TAKEOFF_LANDING + MAX_FLUCTUATION_TAKEOFF_LANDING;
+        if (maxPossibleNextValue <= CRUISING_ALTITUDE) {
+            Integer fluctuation = (int)(Math.random() * MAX_FLUCTUATION_TAKEOFF_LANDING * 2) - MAX_FLUCTUATION_TAKEOFF_LANDING;
+            altitude.currentAltitude += INCREMENT_TAKEOFF_LANDING + fluctuation;
+        } else {
+            altitude.changeState(new CruisingState(altitude));
+        }
+
+        System.out.println("Altitude: " + altitude.currentAltitude);
+    }
+
+    @Override
     public void generateAltitude() {
-
-        TimerTask takeoffTask = new TimerTask() {
-            @Override
-            public void run() {
-                if (altitude.currentAltitude + 600 <= CRUISING_ALTITUDE) {
-                    Integer fluctuation = (int)(Math.random() * 200) - 100;
-                    altitude.currentAltitude += TAKEOFF_LANDING_INCREMENT + fluctuation;
-                    System.out.println("Altitude: " + altitude.currentAltitude);
-                } else {
-                    altitude.changeState(new CruisingState(altitude));
-                }
-            }
-        };
-
-        timer.scheduleAtFixedRate(takeoffTask, 0L, TICK_RATE);
-
+        timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
     }
 
     @Override

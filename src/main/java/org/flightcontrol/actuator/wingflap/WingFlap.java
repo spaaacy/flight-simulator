@@ -8,20 +8,24 @@ import java.util.TimerTask;
 import java.util.concurrent.Phaser;
 
 import static org.flightcontrol.flight.Flight.TICK_RATE;
-import static org.flightcontrol.sensor.altitude.Altitude.CRUISING_ALTITUDE;
 
-enum Direction { UP, DOWN, NEUTRAL }
+enum Direction {UP, DOWN, NEUTRAL}
 
 public class WingFlap extends TimerTask implements Observer {
 
     Altitude altitude;
-    WingFlapState wingFlapState;
     Phaser phaser;
+    WingFlapState wingFlapState;
     Direction direction;
     Timer timer = new Timer();
 
-    static final Integer CRUISING_INCREMENT = 500;
 
+    public static final Integer CRUISING_ALTITUDE = 11000;
+    static final Integer MAX_FLUCTUATION_UP_DOWN = 5;
+    static final Integer MAX_FLUCTUATION_NEUTRAL = 500;
+    static final Integer INCREMENT_VALUE_UP_DOWN = 15;
+    static final Integer ACCEPTED_RANGE = 500;
+    // Plane attempts to fly 10500-11500
 
     public WingFlap(Altitude altitude, Phaser phaser) {
         this.altitude = altitude;
@@ -30,21 +34,17 @@ public class WingFlap extends TimerTask implements Observer {
 
     @Override
     public void run() {
-        Integer currentAltitude = altitude.getCurrentAltitude();
-        if (currentAltitude - CRUISING_ALTITUDE > 250) { // Plane flying too high
-            setWingFlapState(new WingFlapUpState(this, altitude));
-        } else if (currentAltitude - CRUISING_ALTITUDE < -250) { // Plane flying too low
-            setWingFlapState(new WingFlapDownState(this, altitude));
-        } else { // Plane at optimal altitude
-            setWingFlapState(new WingFlapNeutralState(this, altitude));
-        }
+        wingFlapState.controlFlaps();
     }
 
     @Override
     public void update() {
         switch (phaser.getPhase()) {
             case 1 -> direction = Direction.DOWN;
-            case 2 -> cruisingFlapControl();
+            case 2 -> {
+                setWingFlapState(new WingFlapNeutralState(this, altitude));
+                timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
+            }
             case 3 -> {
                 timer.cancel();
                 direction = Direction.UP;
@@ -52,13 +52,18 @@ public class WingFlap extends TimerTask implements Observer {
         }
     }
 
-    public void setWingFlapState(WingFlapState wingFlapState) {
-        this.wingFlapState = wingFlapState;
-        wingFlapState.controlFlaps();
+    public void setDirection(Direction direction) {
+        this.direction = direction;
+        System.out.println("WingFlap: " + direction.toString());
     }
 
-    public void cruisingFlapControl() {
-        timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
+    public void setWingFlapState(WingFlapState newWingFlapState) {
+        if (newWingFlapState != null) {
+            newWingFlapState.stopExecution();
+        }
+
+        this.wingFlapState = newWingFlapState;
+        System.out.println("WingFlap: " + newWingFlapState.toString());
     }
 
 }

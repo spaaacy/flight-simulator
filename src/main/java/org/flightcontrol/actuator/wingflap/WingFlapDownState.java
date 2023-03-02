@@ -3,11 +3,12 @@ package org.flightcontrol.actuator.wingflap;
 import org.flightcontrol.sensor.altitude.Altitude;
 
 import java.util.Timer;
-import java.util.TimerTask;
 
-import static org.flightcontrol.flight.Flight.TICK_RATE;
+import static org.flightcontrol.actuator.wingflap.WingFlap.*;
 
 public class WingFlapDownState implements WingFlapState {
+
+    static final String POSITION_NAME = "DOWN";
 
     WingFlap wingFlap;
     Altitude altitude;
@@ -20,22 +21,17 @@ public class WingFlapDownState implements WingFlapState {
 
     @Override
     public void controlFlaps() {
+        wingFlap.direction = Direction.DOWN;
 
-        System.out.println("WingFlap: Down");
+        Integer currentAltitude = altitude.getCurrentAltitude();
+        Integer fluctuation = (int) (Math.random() * MAX_FLUCTUATION_UP_DOWN * 2) - MAX_FLUCTUATION_UP_DOWN;
+        Integer newAltitude = currentAltitude + INCREMENT_VALUE_UP_DOWN + fluctuation;
+        altitude.setCurrentAltitude(newAltitude);
 
-        TimerTask flapsTask = new TimerTask() {
-            @Override
-            public void run() {
-                Integer currentAltitude = altitude.getCurrentAltitude();
-                wingFlap.direction = Direction.DOWN;
-                Integer fluctuation = (int)(Math.random() * 200) - 100;
-                Integer newAltitude = currentAltitude + fluctuation;
-                altitude.setCurrentAltitude(newAltitude);
-            }
-        };
-
-        timer.scheduleAtFixedRate(flapsTask, 0L, TICK_RATE);
-
+        // Checks to see if plane is now within acceptable range
+        if (newAltitude - CRUISING_ALTITUDE > -ACCEPTED_RANGE) {
+            wingFlap.setWingFlapState(new WingFlapNeutralState(wingFlap, altitude));
+        }
 
     }
 
@@ -43,4 +39,10 @@ public class WingFlapDownState implements WingFlapState {
     public void stopExecution() {
         timer.cancel();
     }
+
+    @Override
+    public String toString() {
+        return POSITION_NAME;
+    }
+
 }

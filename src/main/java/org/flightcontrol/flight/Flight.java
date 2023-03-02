@@ -12,7 +12,8 @@ import java.util.concurrent.Phaser;
 
 public class Flight implements Runnable, Observer {
 
-    public static final Long TICK_RATE = 300L;
+    public static final Long TICK_RATE = 50L;
+
     Phaser phaser = new Phaser(1);
     LinkedList<Observer> observers = new LinkedList<>();
     Timer timer = new Timer();
@@ -25,8 +26,11 @@ public class Flight implements Runnable, Observer {
 
 
     public Flight() {
+        // Objects observing flight
         addObserver(altitude);
         addObserver(wingFlap);
+
+        // Objects observing altitude
         altitude.addObserver(this);
     }
 
@@ -38,6 +42,7 @@ public class Flight implements Runnable, Observer {
 
     private void nextPhase() {
         phaser.arrive();
+
         TimerTask updateTask = new TimerTask() {
             @Override
             public void run() {
@@ -50,9 +55,10 @@ public class Flight implements Runnable, Observer {
     }
 
     public void initiateLanding() {
-        if (phaser.getPhase() == 2){
+        if (phaser.getPhase() == 2) {
             nextPhase();
             System.out.println("Flight: Landing");
+
             phaser.arriveAndAwaitAdvance();
             System.out.println("Flight: We have landed successfully");
         }
