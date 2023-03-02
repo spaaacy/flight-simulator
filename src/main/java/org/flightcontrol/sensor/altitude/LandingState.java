@@ -16,17 +16,24 @@ public class LandingState implements AltitudeState {
 
     @Override
     public void generateAltitude() {
-
-        System.out.println("Altitude: Landing");
         TimerTask landingTask = new TimerTask() {
             @Override
             public void run() {
                 if (altitude.currentAltitude > 0) {
-                    Integer fluctuation = (int)(Math.random() * 200) - 100;
-                    altitude.currentAltitude += TAKEOFF_LANDING_INCREMENT - fluctuation;
-                    System.out.println("Altitude: " + altitude.currentAltitude);
+
+                    if (!(altitude.currentAltitude <= 600)) {
+                        Integer fluctuation = (int)(Math.random() * 200) - 100;
+                        altitude.currentAltitude +=  fluctuation - TAKEOFF_LANDING_INCREMENT;
+                        System.out.println("Altitude: " + altitude.currentAltitude);
+
+                    } else {
+                        altitude.currentAltitude = 0;
+                        System.out.println("Altitude: " + altitude.currentAltitude);
+                    }
+
                 } else {
                     timer.cancel();
+                    altitude.phaser.arriveAndDeregister();
                 }
             }
         };
@@ -35,6 +42,12 @@ public class LandingState implements AltitudeState {
         timer.scheduleAtFixedRate(landingTask, 0L, UPDATE_RATE);
 
     }
+
+    @Override
+    public void stopExecuting() {
+        timer.cancel();
+    }
+
 
 
 }

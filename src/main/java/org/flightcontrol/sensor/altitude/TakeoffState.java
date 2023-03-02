@@ -17,7 +17,6 @@ public class TakeoffState implements AltitudeState {
     @Override
     public void generateAltitude() {
 
-        System.out.println("Altitude: Taking off");
         TimerTask takeoffTask = new TimerTask() {
             @Override
             public void run() {
@@ -26,7 +25,6 @@ public class TakeoffState implements AltitudeState {
                     altitude.currentAltitude += TAKEOFF_LANDING_INCREMENT + fluctuation;
                     System.out.println("Altitude: " + altitude.currentAltitude);
                 } else {
-                    timer.cancel();
                     altitude.changeState(new CruisingState(altitude));
                 }
             }
@@ -36,5 +34,8 @@ public class TakeoffState implements AltitudeState {
 
     }
 
-
+    @Override
+    public void stopExecuting() {
+        timer.cancel();
+    }
 }

@@ -2,6 +2,6 @@ package org.flightcontrol.flight;
 
 public interface Observer {
 
-    public void update(int phaseValue);
+    public void update();
 
 }
