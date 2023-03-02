@@ -33,7 +33,6 @@ public class CruisingState implements AltitudeState {
 
 
         altitude.phaser.arriveAndAwaitAdvance(); // First arrive to go into phase 2: Cruising
-        System.out.println("Altitude: Phase " + altitude.phaser.getPhase());
         timer.scheduleAtFixedRate(cruisingTask, 0L, UPDATE_RATE);
         altitude.phaser.arrive(); // Second arrive to give thumb-up for phase 3: Landing
 

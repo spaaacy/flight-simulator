@@ -20,7 +20,7 @@ public class TakeoffState implements AltitudeState {
         TimerTask takeoffTask = new TimerTask() {
             @Override
             public void run() {
-                if (altitude.currentAltitude + 100 <= CRUISING_ALTITUDE) {
+                if (altitude.currentAltitude + 600 <= CRUISING_ALTITUDE) {
                     Integer fluctuation = (int)(Math.random() * 200) - 100;
                     altitude.currentAltitude += TAKEOFF_LANDING_INCREMENT + fluctuation;
                     System.out.println("Altitude: " + altitude.currentAltitude);

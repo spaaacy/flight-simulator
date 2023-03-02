@@ -32,8 +32,8 @@ public class LandingState implements AltitudeState {
                     }
 
                 } else {
-                    timer.cancel();
                     altitude.phaser.arriveAndDeregister();
+                    timer.cancel();
                 }
             }
         };
