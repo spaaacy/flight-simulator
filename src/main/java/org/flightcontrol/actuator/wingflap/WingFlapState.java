@@ -1,5 +1,6 @@
 package org.flightcontrol.actuator.wingflap;
 
 public interface WingFlapState {
-    public void adjustDirection();
+    public void controlFlaps();
+    public void stopExecution();
 }

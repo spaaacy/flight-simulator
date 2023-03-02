@@ -61,7 +61,7 @@ public class Altitude implements Runnable, Observer {
         return currentAltitude;
     }
 
-    public void setCurrentAltitude(Integer currentAltitude) {
-        this.currentAltitude = currentAltitude;
+    public void setCurrentAltitude(Integer newAltitude) {
+        this.currentAltitude = newAltitude;
     }
 }

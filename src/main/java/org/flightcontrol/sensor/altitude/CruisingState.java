@@ -21,20 +21,18 @@ public class CruisingState implements AltitudeState {
     @Override
     public void generateAltitude() {
 
-/*
         TimerTask cruisingTask = new TimerTask() {
             @Override
             public void run() {
-                Integer fluctuation = (int)(Math.random() * 2000) - 1000;
-                altitude.currentAltitude = CRUISING_ALTITUDE + fluctuation;
+//                Integer fluctuation = (int)(Math.random() * 2000) - 1000;
+//                altitude.currentAltitude = CRUISING_ALTITUDE + fluctuation;
                 System.out.println("Altitude: " + altitude.currentAltitude);
             }
         };
-*/
 
 
         altitude.phaser.arriveAndAwaitAdvance(); // First arrive to go into phase 2: Cruising
-//        timer.scheduleAtFixedRate(cruisingTask, 0L, TICK_RATE);
+        timer.scheduleAtFixedRate(cruisingTask, 0L, TICK_RATE);
         altitude.phaser.arrive(); // Second arrive to give thumb-up for phase 3: Landing
 
 

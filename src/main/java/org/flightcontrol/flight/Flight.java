@@ -1,21 +1,32 @@
 package org.flightcontrol.flight;
 
 import org.flightcontrol.Observer;
+import org.flightcontrol.actuator.wingflap.WingFlap;
 import org.flightcontrol.sensor.altitude.Altitude;
 import org.flightcontrol.sensor.altitude.CruisingState;
 
 import java.util.LinkedList;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Phaser;
 
 public class Flight implements Runnable, Observer {
 
     public static final Long TICK_RATE = 300L;
     Phaser phaser = new Phaser(1);
-    public Altitude altitude = new Altitude(phaser);
     LinkedList<Observer> observers = new LinkedList<>();
+    Timer timer = new Timer();
+
+    // Sensors
+    Altitude altitude = new Altitude(phaser);
+
+    // Actuators
+    WingFlap wingFlap = new WingFlap(altitude, phaser);
+
 
     public Flight() {
         addObserver(altitude);
+        addObserver(wingFlap);
         altitude.addObserver(this);
     }
 
@@ -27,9 +38,15 @@ public class Flight implements Runnable, Observer {
 
     private void nextPhase() {
         phaser.arrive();
-        for (Observer observer : observers) {
-            observer.update();
-        }
+        TimerTask updateTask = new TimerTask() {
+            @Override
+            public void run() {
+                for (Observer observer : observers) {
+                    observer.update();
+                }
+            }
+        };
+        timer.schedule(updateTask, 500L);
     }
 
     public void initiateLanding() {
@@ -56,4 +73,6 @@ public class Flight implements Runnable, Observer {
     public Altitude getAltitude() {
         return altitude;
     }
+
+
 }
