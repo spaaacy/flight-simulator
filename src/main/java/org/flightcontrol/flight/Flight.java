@@ -12,7 +12,7 @@ import java.util.concurrent.Phaser;
 
 public class Flight implements Runnable, Observer {
 
-    public static final Long TICK_RATE = 100L;
+    public static final Long TICK_RATE = 500L;
 
     Phaser phaser = new Phaser(1);
     LinkedList<Observer> observers = new LinkedList<>();

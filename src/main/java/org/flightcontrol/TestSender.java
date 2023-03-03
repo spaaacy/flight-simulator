@@ -11,22 +11,40 @@ import java.util.concurrent.TimeoutException;
 
 public class TestSender extends TimerTask {
 
+    static final String QUEUE_NAME = "TestQueue";
+
     public static void main(String[] args) {
-        TestSender testSender = new TestSender();
         Timer timer = new Timer();
+        TestSender testSender = new TestSender();
+//        testSender.send();
         timer.schedule(testSender, 0L, 1000L);
     }
 
-    String QUEUE_NAME = "TestQueue";
-
     @Override
     public void run() {
-        ConnectionFactory connectionFactory = new ConnectionFactory();
-        try (Connection connection = connectionFactory.newConnection();
-            Channel channel = connection.createChannel()) {
-            channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-            String randomMessage = Double.toString (Math.random() * 1000);
-            channel.basicPublish(randomMessage, QUEUE_NAME, null, randomMessage.getBytes());
-        } catch (IOException | TimeoutException ignored) {}
+        try {
+            send();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public TestSender() {
+        try {
+            ConnectionFactory cf = new ConnectionFactory();
+            Connection connection = cf.newConnection();
+            channel = connection.createChannel();
+//            connection.close();
+        } catch (IOException | TimeoutException ignored) {
+        }
+
+    }
+
+    Channel channel;
+
+    public void send() throws IOException {
+        channel.queueDeclare(QUEUE_NAME, false, false, false, null);
+        String randomMessage = "This is a random message!";
+        channel.basicPublish("", QUEUE_NAME, null, randomMessage.getBytes());
     }
 }

@@ -1,5 +1,6 @@
 package org.flightcontrol.sensor.altitude;
 
+import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
