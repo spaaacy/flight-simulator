@@ -23,7 +23,12 @@ public class CruisingState extends TimerTask implements AltitudeState {
     Connection connection;
     Channel channelSend;
     Channel channelReceive;
-    DeliverCallback deliverCallback;
+
+    // Callback to be used by Rabbit MQ receive
+    DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+        String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+        altitude.currentAltitude = Integer.valueOf(message);
+    };
 
     public CruisingState(Altitude altitude) {
         this.altitude = altitude;
@@ -35,13 +40,6 @@ public class CruisingState extends TimerTask implements AltitudeState {
             channelSend = connection.createChannel();
             channelReceive = connection.createChannel();
         } catch (IOException | TimeoutException ignored) {}
-
-        // Callback to be used by Rabbit MQ receive
-        deliverCallback = (consumerTag, delivery) -> {
-            String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-            Integer newAltitude = Integer.valueOf(message);
-            altitude.setCurrentAltitude(newAltitude);
-        };
 
         listenForWingFlap();
 

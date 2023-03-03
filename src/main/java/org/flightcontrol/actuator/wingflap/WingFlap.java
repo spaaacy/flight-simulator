@@ -2,7 +2,6 @@ package org.flightcontrol.actuator.wingflap;
 
 import com.rabbitmq.client.*;
 import org.flightcontrol.Observer;
-import org.flightcontrol.sensor.altitude.Altitude;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -15,25 +14,29 @@ import static org.flightcontrol.flight.Flight.TICK_RATE;
 import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_EXCHANGE_KEY;
 import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_EXCHANGE_NAME;
 
-enum Direction {UP, DOWN, NEUTRAL}
+enum WingFlapDirection {UP, DOWN, NEUTRAL}
 
 public class WingFlap extends TimerTask implements Observer {
 
     public static final String WING_FLAP_EXCHANGE_NAME = "WingFlapExchange";
     public static final String WING_FLAP_EXCHANGE_KEY = "WingFlapKey";
 
-    Altitude altitude;
     Integer currentAltitude;
     Phaser phaser;
     WingFlapState wingFlapState;
-    Direction direction;
+    WingFlapDirection wingFlapDirection;
     Timer timer = new Timer();
 
     // RabbitMQ variables
     Connection connection;
     Channel channelReceive;
     Channel channelSend;
-    DeliverCallback deliverCallback;
+
+    // Callback to be used by Rabbit MQ receive
+    DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+        String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+        currentAltitude = Integer.valueOf(message);
+    };
 
 
     // Plane attempts to fly 10500-11500
@@ -43,8 +46,7 @@ public class WingFlap extends TimerTask implements Observer {
     static final Integer INCREMENT_VALUE_UP_DOWN = 15;
     static final Integer ACCEPTED_RANGE = 500;
 
-    public WingFlap(Altitude altitude, Phaser phaser) {
-        this.altitude = altitude;
+    public WingFlap(Phaser phaser) {
         this.phaser = phaser;
 
         // Create channels for Rabbit MQ
@@ -55,11 +57,7 @@ public class WingFlap extends TimerTask implements Observer {
             channelSend = connection.createChannel();
         } catch (IOException | TimeoutException ignored) { }
 
-        // Callback to be used by Rabbit MQ receive
-        deliverCallback = (consumerTag, delivery) -> {
-            String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-            currentAltitude = Integer.valueOf(  message);
-        };
+
 
     }
 
@@ -88,22 +86,25 @@ public class WingFlap extends TimerTask implements Observer {
     @Override
     public void update() {
         switch (phaser.getPhase()) {
-            case 1 -> direction = Direction.DOWN;
+            case 1 -> setDirection(WingFlapDirection.DOWN);
             case 2 -> {
                 listenForAltitude();
-                setWingFlapState(new WingFlapNeutralState(this, altitude));
+                setWingFlapState(new WingFlapNeutralState(this));
                 timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
             }
             case 3 -> {
                 timer.cancel();
-                direction = Direction.UP;
+                setDirection(WingFlapDirection.UP);
+                try {
+                    connection.close();
+                } catch (IOException ignored) {}
             }
         }
     }
 
-    public void setDirection(Direction direction) {
-        this.direction = direction;
-        System.out.println("WingFlap: " + direction.toString());
+    public void setDirection(WingFlapDirection wingFlapDirection) {
+        this.wingFlapDirection = wingFlapDirection;
+        System.out.println("Wing Flap: " + wingFlapDirection.toString());
     }
 
     public void setWingFlapState(WingFlapState newWingFlapState) {
@@ -112,7 +113,6 @@ public class WingFlap extends TimerTask implements Observer {
         }
 
         this.wingFlapState = newWingFlapState;
-        System.out.println("WingFlap: " + newWingFlapState.toString());
     }
 
 }

@@ -4,6 +4,7 @@ import org.flightcontrol.Observer;
 import org.flightcontrol.actuator.wingflap.WingFlap;
 import org.flightcontrol.sensor.altitude.Altitude;
 import org.flightcontrol.sensor.altitude.CruisingState;
+import org.flightcontrol.sensor.direction.Direction;
 
 import java.util.LinkedList;
 import java.util.Timer;
@@ -20,15 +21,17 @@ public class Flight implements Runnable, Observer {
 
     // Sensors
     Altitude altitude = new Altitude(phaser);
+    Direction direction = new Direction(phaser);
 
     // Actuators
-    WingFlap wingFlap = new WingFlap(altitude, phaser);
+    WingFlap wingFlap = new WingFlap(phaser);
 
 
     public Flight() {
         // Objects observing flight
         addObserver(altitude);
         addObserver(wingFlap);
+        addObserver(direction);
 
         // Objects observing altitude
         altitude.addObserver(this);

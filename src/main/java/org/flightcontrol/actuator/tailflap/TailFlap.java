@@ -1,0 +1,108 @@
+package org.flightcontrol.actuator.tailflap;
+
+import com.rabbitmq.client.*;
+import org.flightcontrol.Observer;
+
+import javax.swing.event.ChangeEvent;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.sql.Time;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.Phaser;
+import java.util.concurrent.TimeoutException;
+
+import static org.flightcontrol.flight.Flight.TICK_RATE;
+import static org.flightcontrol.sensor.direction.Direction.DIRECTION_EXCHANGE_KEY;
+import static org.flightcontrol.sensor.direction.Direction.DIRECTION_EXCHANGE_NAME;
+
+enum TailFlapDirection {LEFT, RIGHT, NEUTRAL};
+
+public class TailFlap extends TimerTask implements Observer {
+
+    public static final String TAIL_FLAP_EXCHANGE_NAME = "TailFlapExchange";
+    public static final String TAIL_FLAP_EXCHANGE_KEY = "TailFlapKey";
+
+    Phaser phaser;
+    Timer timer = new Timer();
+    Integer currentDirection;
+    TailFlapDirection tailFlapDirection;
+    TailFlapState tailFlapState;
+
+    // RabbitMQ variables
+    Connection connection;
+    Channel channelSend;
+    Channel channelReceive;
+
+    // Callback to be used by Rabbit MQ receive
+    DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+        String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+        currentDirection = Integer.valueOf(message);
+    };
+
+    public TailFlap(Phaser phaser) {
+        this.phaser = phaser;
+
+        try {
+            ConnectionFactory connectionFactory = new ConnectionFactory();
+            connection = connectionFactory.newConnection();
+            channelSend = connection.createChannel();
+            channelReceive = connection.createChannel();
+        } catch (IOException | TimeoutException ignored) {}
+
+    }
+
+    @Override
+    public void run() {
+        tailFlapState.controlFlaps();
+    }
+
+    @Override
+    public void update() {
+        switch (phaser.getPhase()) {
+            case 1 -> setTailFlapDirection(TailFlapDirection.NEUTRAL);
+            case 2 -> {
+                listenForDirection();
+                tailFlapState = new TailFlapNeutralState(this);
+                timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
+            }
+            case 3 -> {
+                timer.cancel();
+                setTailFlapDirection(TailFlapDirection.NEUTRAL);
+                try {
+                    connection.close();
+                } catch (IOException ignored) {}
+            }
+        }
+    }
+
+    public void setTailFlapState(TailFlapState tailFlapState) {
+        if (tailFlapState != null) {
+            tailFlapState.stopExecution();
+        }
+
+        this.tailFlapState = tailFlapState;
+    }
+
+    public void setTailFlapDirection(TailFlapDirection tailFlapDirection) {
+        this.tailFlapDirection = tailFlapDirection;
+        System.out.println("TailFlap: " + tailFlapDirection.toString());
+    }
+
+    private void listenForDirection() {
+        try {
+            channelReceive.exchangeDeclare(DIRECTION_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            String queueName = channelReceive.queueDeclare().getQueue();
+            channelReceive.queueBind(queueName, DIRECTION_EXCHANGE_NAME, DIRECTION_EXCHANGE_KEY);
+            channelReceive.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
+        } catch (IOException ignored) {}
+    }
+
+    private void sendNewDirection(Integer newDirection) {
+        try {
+            channelSend.exchangeDeclare(TAIL_FLAP_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            String message = newDirection.toString();
+            channelSend.basicPublish(TAIL_FLAP_EXCHANGE_NAME, TAIL_FLAP_EXCHANGE_KEY, null, message.getBytes());
+        } catch (IOException ignored) {}
+    }
+}
