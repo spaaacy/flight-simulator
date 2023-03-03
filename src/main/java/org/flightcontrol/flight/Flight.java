@@ -1,10 +1,12 @@
 package org.flightcontrol.flight;
 
 import org.flightcontrol.Observer;
+import org.flightcontrol.actuator.tailflap.TailFlap;
+import org.flightcontrol.actuator.tailflap.TailFlapRightState;
 import org.flightcontrol.actuator.wingflap.WingFlap;
 import org.flightcontrol.sensor.altitude.Altitude;
 import org.flightcontrol.sensor.altitude.CruisingState;
-import org.flightcontrol.sensor.direction.Direction;
+import org.flightcontrol.sensor.gps.GPS;
 
 import java.util.LinkedList;
 import java.util.Timer;
@@ -13,7 +15,7 @@ import java.util.concurrent.Phaser;
 
 public class Flight implements Runnable, Observer {
 
-    public static final Long TICK_RATE = 500L;
+    public static final Long TICK_RATE = 250L;
 
     Phaser phaser = new Phaser(1);
     LinkedList<Observer> observers = new LinkedList<>();
@@ -21,19 +23,20 @@ public class Flight implements Runnable, Observer {
 
     // Sensors
     Altitude altitude = new Altitude(phaser);
-    Direction direction = new Direction(phaser);
+    GPS gps = new GPS(phaser);
 
     // Actuators
     WingFlap wingFlap = new WingFlap(phaser);
+    TailFlap tailFlap = new TailFlap(phaser);
 
 
     public Flight() {
         // Objects observing flight
         addObserver(altitude);
         addObserver(wingFlap);
-        addObserver(direction);
+        addObserver(gps);
+        addObserver(tailFlap);
 
-        // Objects observing altitude
         altitude.addObserver(this);
     }
 

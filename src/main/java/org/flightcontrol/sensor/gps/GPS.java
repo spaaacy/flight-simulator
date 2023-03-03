@@ -1,4 +1,4 @@
-package org.flightcontrol.sensor.direction;
+package org.flightcontrol.sensor.gps;
 
 import com.rabbitmq.client.*;
 import org.flightcontrol.Observer;
@@ -10,19 +10,20 @@ import java.util.TimerTask;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeoutException;
 
-import static org.flightcontrol.actuator.tailflap.TailFlap.TAIL_FLAP_EXCHANGE_KEY;
-import static org.flightcontrol.actuator.tailflap.TailFlap.TAIL_FLAP_EXCHANGE_NAME;
+import static org.flightcontrol.actuator.tailflap.TailFlap.*;
 import static org.flightcontrol.flight.Flight.TICK_RATE;
 
-public class Direction extends TimerTask implements Observer {
+public class GPS extends TimerTask implements Observer {
 
     // Directions are in degrees (0-360)
-    static final int BEARING_TO_DESTINATION = 290;
-    public static final String DIRECTION_EXCHANGE_NAME = "DirectionExchange";
-    public static final String DIRECTION_EXCHANGE_KEY = "DirectionKey";
+    static final String DEGREE_SYMBOL = "°";
+    public static final Integer STARTING_BEARING = 180;
+
+    public static final String GPS_EXCHANGE_NAME = "GPSExchange";
+    public static final String GPS_EXCHANGE_KEY = "GPSKey";
 
     Phaser phaser;
-    Integer currentDirection = 180;
+    Integer currentBearing = STARTING_BEARING;
     Timer timer = new Timer();
 
     // RabbitMQ variables
@@ -33,16 +34,16 @@ public class Direction extends TimerTask implements Observer {
     // Callback to be used by Rabbit MQ receive
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-        currentDirection = Integer.valueOf(message);
+        currentBearing = Integer.valueOf(message);
     };
 
     @Override
     public void run() {
         sendCurrentDirection();
-        System.out.println("Direction: " + currentDirection);
+//        System.out.println("GPS: " + currentBearing + DEGREE_SYMBOL);
     }
 
-    public Direction(Phaser phaser) {
+    public GPS(Phaser phaser) {
         this.phaser = phaser;
 
         try {
@@ -56,7 +57,7 @@ public class Direction extends TimerTask implements Observer {
     @Override
     public void update() {
         if (phaser.getPhase() == 2) {
-            System.out.println("Direction: Destination is at a bearing of " + BEARING_TO_DESTINATION);
+            System.out.println("GPS: Destination is at a bearing of " + BEARING_DESTINATION + DEGREE_SYMBOL);
             listenForTailFlap();
             timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
         }
@@ -73,9 +74,9 @@ public class Direction extends TimerTask implements Observer {
 
     private void sendCurrentDirection() {
         try {
-            channelSend.exchangeDeclare(DIRECTION_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
-            String message = currentDirection.toString();
-            channelSend.basicPublish(DIRECTION_EXCHANGE_NAME, DIRECTION_EXCHANGE_KEY, null, message.getBytes());
+            channelSend.exchangeDeclare(GPS_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            String message = currentBearing.toString();
+            channelSend.basicPublish(GPS_EXCHANGE_NAME, GPS_EXCHANGE_KEY, null, message.getBytes());
         } catch (IOException ignored) {}
     }
 

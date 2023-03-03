@@ -3,18 +3,15 @@ package org.flightcontrol.actuator.tailflap;
 import com.rabbitmq.client.*;
 import org.flightcontrol.Observer;
 
-import javax.swing.event.ChangeEvent;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.sql.Time;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeoutException;
 
 import static org.flightcontrol.flight.Flight.TICK_RATE;
-import static org.flightcontrol.sensor.direction.Direction.DIRECTION_EXCHANGE_KEY;
-import static org.flightcontrol.sensor.direction.Direction.DIRECTION_EXCHANGE_NAME;
+import static org.flightcontrol.sensor.gps.GPS.*;
 
 enum TailFlapDirection {LEFT, RIGHT, NEUTRAL};
 
@@ -23,11 +20,18 @@ public class TailFlap extends TimerTask implements Observer {
     public static final String TAIL_FLAP_EXCHANGE_NAME = "TailFlapExchange";
     public static final String TAIL_FLAP_EXCHANGE_KEY = "TailFlapKey";
 
+    public static final int BEARING_DESTINATION = 290;
+    static final Integer MAX_FLUCTUATION_LEFT_RIGHT = 2;
+    static final Integer MAX_FLUCTUATION_NEUTRAL = 20;
+    static final Integer INCREMENT_VALUE_LEFT_RIGHT = 4;
+    static final Integer ACCEPTED_RANGE = 10;
+
     Phaser phaser;
     Timer timer = new Timer();
-    Integer currentDirection;
+    Integer currentBearing = STARTING_BEARING;
     TailFlapDirection tailFlapDirection;
     TailFlapState tailFlapState;
+    Boolean onCourse = false;
 
     // RabbitMQ variables
     Connection connection;
@@ -37,7 +41,7 @@ public class TailFlap extends TimerTask implements Observer {
     // Callback to be used by Rabbit MQ receive
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-        currentDirection = Integer.valueOf(message);
+        currentBearing = Integer.valueOf(message);
     };
 
     public TailFlap(Phaser phaser) {
@@ -76,29 +80,21 @@ public class TailFlap extends TimerTask implements Observer {
         }
     }
 
-    public void setTailFlapState(TailFlapState tailFlapState) {
-        if (tailFlapState != null) {
-            tailFlapState.stopExecution();
-        }
-
-        this.tailFlapState = tailFlapState;
-    }
-
     public void setTailFlapDirection(TailFlapDirection tailFlapDirection) {
         this.tailFlapDirection = tailFlapDirection;
-        System.out.println("TailFlap: " + tailFlapDirection.toString());
+//        System.out.println("TailFlap: " + tailFlapDirection.toString());
     }
 
     private void listenForDirection() {
         try {
-            channelReceive.exchangeDeclare(DIRECTION_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            channelReceive.exchangeDeclare(GPS_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
             String queueName = channelReceive.queueDeclare().getQueue();
-            channelReceive.queueBind(queueName, DIRECTION_EXCHANGE_NAME, DIRECTION_EXCHANGE_KEY);
+            channelReceive.queueBind(queueName, GPS_EXCHANGE_NAME, GPS_EXCHANGE_KEY);
             channelReceive.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
         } catch (IOException ignored) {}
     }
 
-    private void sendNewDirection(Integer newDirection) {
+    protected void sendNewBearing(Integer newDirection) {
         try {
             channelSend.exchangeDeclare(TAIL_FLAP_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
             String message = newDirection.toString();

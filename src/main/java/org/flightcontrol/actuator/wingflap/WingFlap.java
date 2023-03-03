@@ -21,7 +21,14 @@ public class WingFlap extends TimerTask implements Observer {
     public static final String WING_FLAP_EXCHANGE_NAME = "WingFlapExchange";
     public static final String WING_FLAP_EXCHANGE_KEY = "WingFlapKey";
 
-    Integer currentAltitude;
+    // Plane attempts to fly 10500-11500
+    public static final Integer CRUISING_ALTITUDE = 11000;
+    static final Integer MAX_FLUCTUATION_UP_DOWN = 10;
+    static final Integer MAX_FLUCTUATION_NEUTRAL = 750;
+    static final Integer INCREMENT_VALUE_UP_DOWN = 30;
+    static final Integer ACCEPTED_RANGE = 500;
+
+    Integer currentAltitude = CRUISING_ALTITUDE;
     Phaser phaser;
     WingFlapState wingFlapState;
     WingFlapDirection wingFlapDirection;
@@ -39,12 +46,6 @@ public class WingFlap extends TimerTask implements Observer {
     };
 
 
-    // Plane attempts to fly 10500-11500
-    public static final Integer CRUISING_ALTITUDE = 11000;
-    static final Integer MAX_FLUCTUATION_UP_DOWN = 5;
-    static final Integer MAX_FLUCTUATION_NEUTRAL = 500;
-    static final Integer INCREMENT_VALUE_UP_DOWN = 15;
-    static final Integer ACCEPTED_RANGE = 500;
 
     public WingFlap(Phaser phaser) {
         this.phaser = phaser;
@@ -89,7 +90,7 @@ public class WingFlap extends TimerTask implements Observer {
             case 1 -> setDirection(WingFlapDirection.DOWN);
             case 2 -> {
                 listenForAltitude();
-                setWingFlapState(new WingFlapNeutralState(this));
+                wingFlapState = new WingFlapNeutralState(this);
                 timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
             }
             case 3 -> {
@@ -104,15 +105,6 @@ public class WingFlap extends TimerTask implements Observer {
 
     public void setDirection(WingFlapDirection wingFlapDirection) {
         this.wingFlapDirection = wingFlapDirection;
-        System.out.println("Wing Flap: " + wingFlapDirection.toString());
+        System.out.println("WingFlap: " + wingFlapDirection.toString());
     }
-
-    public void setWingFlapState(WingFlapState newWingFlapState) {
-        if (newWingFlapState != null) {
-            newWingFlapState.stopExecution();
-        }
-
-        this.wingFlapState = newWingFlapState;
-    }
-
 }

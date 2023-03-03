@@ -57,8 +57,4 @@ public class Altitude implements Runnable, Observer {
     public AltitudeState getAltitudeState() {
         return altitudeState;
     }
-
-    public Integer getCurrentAltitude() {
-        return currentAltitude;
-    }
 }

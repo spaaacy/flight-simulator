@@ -7,7 +7,6 @@ import static org.flightcontrol.actuator.wingflap.WingFlap.*;
 public class WingFlapDownState implements WingFlapState {
 
     WingFlap wingFlap;
-    Timer timer = new Timer();
 
     public WingFlapDownState(WingFlap wingFlap) {
         this.wingFlap = wingFlap;
@@ -23,14 +22,9 @@ public class WingFlapDownState implements WingFlapState {
 
         // Checks to see if plane is now within acceptable range
         if (newAltitude - CRUISING_ALTITUDE > -ACCEPTED_RANGE) {
-            wingFlap.setWingFlapState(new WingFlapNeutralState(wingFlap));
+            wingFlap.wingFlapState = new WingFlapNeutralState(wingFlap);
         }
 
-    }
-
-    @Override
-    public void stopExecution() {
-        timer.cancel();
     }
 
 }
