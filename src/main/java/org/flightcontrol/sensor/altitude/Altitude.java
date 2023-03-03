@@ -1,24 +1,17 @@
 package org.flightcontrol.sensor.altitude;
 
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
 import org.flightcontrol.Observer;
 
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.Phaser;
-import java.util.concurrent.TimeoutException;
-
-import static org.flightcontrol.flight.Flight.TICK_RATE;
 
 public class Altitude implements Runnable, Observer {
 
     static final Integer INCREMENT_TAKEOFF_LANDING = 500;
     static final Integer MAX_FLUCTUATION_TAKEOFF_LANDING = 100;
-    public static final String ALTITUDE_QUEUE_NAME = "AltitudeQueue";
+    public static final String ALTITUDE_EXCHANGE_NAME = "AltitudeExchange";
+    public static final String ALTITUDE_EXCHANGE_KEY = "AltitudeKey";
 
     Phaser phaser;
     Integer currentAltitude = 0;

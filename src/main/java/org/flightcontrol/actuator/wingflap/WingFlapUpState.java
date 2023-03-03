@@ -26,7 +26,8 @@ public class WingFlapUpState implements WingFlapState {
         Integer currentAltitude = altitude.getCurrentAltitude();
         int fluctuation = (int) (Math.random() * MAX_FLUCTUATION_UP_DOWN * 2) - MAX_FLUCTUATION_UP_DOWN;
         Integer newAltitude = currentAltitude - INCREMENT_VALUE_UP_DOWN + fluctuation;
-        altitude.setCurrentAltitude(newAltitude);
+        wingFlap.sendNewAltitude(newAltitude);
+//        altitude.setCurrentAltitude(newAltitude);
 
         // Checks to see if plane is now within acceptable range
         if (newAltitude - CRUISING_ALTITUDE < ACCEPTED_RANGE) {

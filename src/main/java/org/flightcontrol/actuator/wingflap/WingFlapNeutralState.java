@@ -26,7 +26,8 @@ public class WingFlapNeutralState implements WingFlapState {
         Integer currentAltitude = altitude.getCurrentAltitude();
         Integer fluctuation = (int) (Math.random() * MAX_FLUCTUATION_NEUTRAL * 2) - MAX_FLUCTUATION_NEUTRAL;
         Integer newAltitude = currentAltitude + fluctuation;
-        altitude.setCurrentAltitude(newAltitude);
+        wingFlap.sendNewAltitude(newAltitude);
+//        altitude.setCurrentAltitude(newAltitude);
 
         // Plane flying too high
         if (newAltitude - CRUISING_ALTITUDE > ACCEPTED_RANGE) {

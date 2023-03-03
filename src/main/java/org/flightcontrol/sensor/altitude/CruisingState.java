@@ -1,16 +1,18 @@
 package org.flightcontrol.sensor.altitude;
 
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.*;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeoutException;
 
+import static org.flightcontrol.actuator.wingflap.WingFlap.WING_FLAP_EXCHANGE_KEY;
+import static org.flightcontrol.actuator.wingflap.WingFlap.WING_FLAP_EXCHANGE_NAME;
 import static org.flightcontrol.flight.Flight.TICK_RATE;
-import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_QUEUE_NAME;
+import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_EXCHANGE_KEY;
+import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_EXCHANGE_NAME;
 
 public class CruisingState extends TimerTask implements AltitudeState {
 
@@ -19,29 +21,53 @@ public class CruisingState extends TimerTask implements AltitudeState {
 
     // RabbitMQ variables
     Connection connection;
-    Channel channel;
+    Channel channelSend;
+    Channel channelReceive;
+    DeliverCallback deliverCallback;
 
     public CruisingState(Altitude altitude) {
         this.altitude = altitude;
 
+        // Create channels for Rabbit MQ
         try {
             ConnectionFactory connectionFactory = new ConnectionFactory();
             connection = connectionFactory.newConnection();
-            channel = connection.createChannel();
+            channelSend = connection.createChannel();
+            channelReceive = connection.createChannel();
         } catch (IOException | TimeoutException ignored) {}
+
+        // Callback to be used by Rabbit MQ receive
+        deliverCallback = (consumerTag, delivery) -> {
+            String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+            Integer newAltitude = Integer.valueOf(message);
+            altitude.setCurrentAltitude(newAltitude);
+        };
+
+        listenForWingFlap();
 
     }
 
     @Override
     public void run() {
-
-        try {
-            channel.queueDeclare(ALTITUDE_QUEUE_NAME, false, false, false, null);
-            String message = altitude.currentAltitude.toString();
-            channel.basicPublish("", ALTITUDE_QUEUE_NAME, null, message.getBytes());
-        } catch (IOException ignored) { }
-
+        sendCurrentAltitude();
         System.out.println("Altitude: " + altitude.currentAltitude);
+    }
+
+    private void listenForWingFlap() {
+        try {
+            channelReceive.exchangeDeclare(WING_FLAP_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            String queueName = channelReceive.queueDeclare().getQueue();
+            channelReceive.queueBind(queueName, WING_FLAP_EXCHANGE_NAME, WING_FLAP_EXCHANGE_KEY);
+            channelReceive.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
+        } catch (IOException ignored) { }
+    }
+
+    private void sendCurrentAltitude() {
+        try {
+            channelSend.exchangeDeclare(ALTITUDE_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            String message = altitude.currentAltitude.toString();
+            channelSend.basicPublish(ALTITUDE_EXCHANGE_NAME, ALTITUDE_EXCHANGE_KEY, null, message.getBytes());
+        } catch (IOException ignored) { }
     }
 
     @Override
