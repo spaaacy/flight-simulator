@@ -24,14 +24,14 @@ public class TailFlap extends TimerTask implements Observer {
     static final Integer MAX_FLUCTUATION_LEFT_RIGHT = 2;
     static final Integer MAX_FLUCTUATION_NEUTRAL = 20;
     static final Integer INCREMENT_VALUE_LEFT_RIGHT = 4;
-    static final Integer ACCEPTED_RANGE = 10;
+    static final Integer ACCEPTED_DIFFERENCE = 10;
 
     Phaser phaser;
     Timer timer = new Timer();
     Integer currentBearing = STARTING_BEARING;
     TailFlapDirection tailFlapDirection;
     TailFlapState tailFlapState;
-    Boolean onCourse = false;
+    Boolean onCourse = false; // Used initially during cruising phase
 
     // RabbitMQ variables
     Connection connection;
@@ -62,11 +62,11 @@ public class TailFlap extends TimerTask implements Observer {
     }
 
     @Override
-    public void update() {
+    public void update(String... updatedValue) {
         switch (phaser.getPhase()) {
             case 1 -> setTailFlapDirection(TailFlapDirection.NEUTRAL);
             case 2 -> {
-                listenForDirection();
+                listenForGPS();
                 tailFlapState = new TailFlapNeutralState(this);
                 timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
             }
@@ -82,10 +82,10 @@ public class TailFlap extends TimerTask implements Observer {
 
     public void setTailFlapDirection(TailFlapDirection tailFlapDirection) {
         this.tailFlapDirection = tailFlapDirection;
-//        System.out.println("TailFlap: " + tailFlapDirection.toString());
+        System.out.println("TailFlap: " + tailFlapDirection.toString());
     }
 
-    private void listenForDirection() {
+    private void listenForGPS() {
         try {
             channelReceive.exchangeDeclare(GPS_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
             String queueName = channelReceive.queueDeclare().getQueue();

@@ -40,7 +40,7 @@ public class GPS extends TimerTask implements Observer {
     @Override
     public void run() {
         sendCurrentDirection();
-//        System.out.println("GPS: " + currentBearing + DEGREE_SYMBOL);
+        System.out.println("GPS: " + currentBearing + DEGREE_SYMBOL);
     }
 
     public GPS(Phaser phaser) {
@@ -55,11 +55,21 @@ public class GPS extends TimerTask implements Observer {
     }
 
     @Override
-    public void update() {
-        if (phaser.getPhase() == 2) {
-            System.out.println("GPS: Destination is at a bearing of " + BEARING_DESTINATION + DEGREE_SYMBOL);
-            listenForTailFlap();
-            timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
+    public void update(String... updatedValue) {
+        switch (phaser.getPhase()) {
+            case 1 -> {
+                System.out.println("GPS: " + currentBearing + DEGREE_SYMBOL);
+                System.out.println("GPS: Destination is at a bearing of " + BEARING_DESTINATION + DEGREE_SYMBOL);
+            }
+            case 2 -> {
+                listenForTailFlap();
+                timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
+            }
+            case 3 -> {
+                try {
+                    connection.close();
+                } catch (IOException ignored) {}
+            }
         }
     }
 

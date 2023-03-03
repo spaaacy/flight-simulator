@@ -24,9 +24,9 @@ public class LandingState extends TimerTask implements AltitudeState  {
             int largestPossibleDecrement = INCREMENT_TAKEOFF_LANDING + MAX_FLUCTUATION_TAKEOFF_LANDING;
             if (minPossibleNextValue > largestPossibleDecrement) {
                 Integer fluctuation = (int)(Math.random() * MAX_FLUCTUATION_TAKEOFF_LANDING * 2) - MAX_FLUCTUATION_TAKEOFF_LANDING;
-                altitude.currentAltitude -= INCREMENT_TAKEOFF_LANDING + fluctuation;
+                altitude.setCurrentAltitude(INCREMENT_TAKEOFF_LANDING + fluctuation);
             } else {
-                altitude.currentAltitude = 0;
+                altitude.setCurrentAltitude(0);
             }
 
             System.out.println("Altitude: " + altitude.currentAltitude);

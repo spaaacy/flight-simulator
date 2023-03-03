@@ -26,7 +26,7 @@ public class WingFlap extends TimerTask implements Observer {
     static final Integer MAX_FLUCTUATION_UP_DOWN = 10;
     static final Integer MAX_FLUCTUATION_NEUTRAL = 750;
     static final Integer INCREMENT_VALUE_UP_DOWN = 30;
-    static final Integer ACCEPTED_RANGE = 500;
+    static final Integer ACCEPTED_DIFFERENCE = 500;
 
     Integer currentAltitude = CRUISING_ALTITUDE;
     Phaser phaser;
@@ -85,7 +85,7 @@ public class WingFlap extends TimerTask implements Observer {
     }
 
     @Override
-    public void update() {
+    public void update(String... updatedValue) {
         switch (phaser.getPhase()) {
             case 1 -> setDirection(WingFlapDirection.DOWN);
             case 2 -> {

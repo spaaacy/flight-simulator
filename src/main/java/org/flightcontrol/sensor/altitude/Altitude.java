@@ -8,6 +8,7 @@ import java.util.concurrent.Phaser;
 
 public class Altitude implements Runnable, Observer {
 
+    public static final String ALTITUDE_CLASS_NAME = "Altitude";
     static final Integer INCREMENT_TAKEOFF_LANDING = 500;
     static final Integer MAX_FLUCTUATION_TAKEOFF_LANDING = 100;
     public static final String ALTITUDE_EXCHANGE_NAME = "AltitudeExchange";
@@ -44,7 +45,7 @@ public class Altitude implements Runnable, Observer {
     }
 
     @Override
-    public void update() {
+    public void update(String... updatedValue) {
         if (phaser.getPhase() == 3) {
             changeState(new LandingState(this));
         }
@@ -56,5 +57,12 @@ public class Altitude implements Runnable, Observer {
 
     public AltitudeState getAltitudeState() {
         return altitudeState;
+    }
+
+    public void setCurrentAltitude(Integer currentAltitude) {
+        this.currentAltitude = currentAltitude;
+        for (Observer observer : observers) {
+            observer.update(ALTITUDE_CLASS_NAME, currentAltitude.toString());
+        }
     }
 }

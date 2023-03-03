@@ -25,11 +25,11 @@ public class TailFlapNeutralState implements TailFlapState {
         tailFlap.sendNewBearing(newBearing);
 
         // Plane flying too far right
-        if (newBearing - BEARING_DESTINATION > ACCEPTED_RANGE) {
+        if (newBearing - BEARING_DESTINATION > ACCEPTED_DIFFERENCE) {
             tailFlap.tailFlapState = new TailFlapRightState(tailFlap);
             tailFlap.onCourse = true;
             // Plane flying too far left
-        } else if (newBearing - BEARING_DESTINATION < -ACCEPTED_RANGE) {
+        } else if (newBearing - BEARING_DESTINATION < -ACCEPTED_DIFFERENCE) {
             tailFlap.tailFlapState = new TailFlapLeftState(tailFlap);
             tailFlap.onCourse = true;
         }

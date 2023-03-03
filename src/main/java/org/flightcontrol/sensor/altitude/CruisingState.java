@@ -27,7 +27,7 @@ public class CruisingState extends TimerTask implements AltitudeState {
     // Callback to be used by Rabbit MQ receive
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-        altitude.currentAltitude = Integer.valueOf(message);
+        altitude.setCurrentAltitude(Integer.valueOf(message));
     };
 
     public CruisingState(Altitude altitude) {

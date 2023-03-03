@@ -31,7 +31,7 @@ public class Flight implements Runnable, Observer {
 
 
     public Flight() {
-        // Objects observing flight
+        // Objects observing flight phase
         addObserver(altitude);
         addObserver(wingFlap);
         addObserver(gps);
@@ -43,7 +43,7 @@ public class Flight implements Runnable, Observer {
     @Override
     public void run() {
         nextPhase();
-        System.out.println("Flight: Taking off");
+        System.out.println("Flight: TAKING OFF");
     }
 
     private void nextPhase() {
@@ -63,18 +63,18 @@ public class Flight implements Runnable, Observer {
     public void initiateLanding() {
         if (phaser.getPhase() == 2) {
             nextPhase();
-            System.out.println("Flight: Landing");
+            System.out.println("Flight: LANDING");
 
             phaser.arriveAndAwaitAdvance();
-            System.out.println("Flight: We have landed successfully");
+            System.out.println("Flight: LANDED");
         }
     }
 
     @Override
-    public void update() {
+    public void update(String... updatedValue) {
         if (altitude.getAltitudeState().getClass().equals(CruisingState.class)) {
             nextPhase();
-            System.out.println("Flight: Cruising");
+            System.out.println("Flight: CRUISING");
         }
     }
 

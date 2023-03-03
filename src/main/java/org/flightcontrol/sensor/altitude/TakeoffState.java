@@ -21,7 +21,8 @@ public class TakeoffState extends TimerTask implements AltitudeState {
         int maxPossibleNextValue = altitude.currentAltitude + INCREMENT_TAKEOFF_LANDING + MAX_FLUCTUATION_TAKEOFF_LANDING;
         if (maxPossibleNextValue <= CRUISING_ALTITUDE) {
             Integer fluctuation = (int)(Math.random() * MAX_FLUCTUATION_TAKEOFF_LANDING * 2) - MAX_FLUCTUATION_TAKEOFF_LANDING;
-            altitude.currentAltitude += INCREMENT_TAKEOFF_LANDING + fluctuation;
+            Integer newAltitude = altitude.currentAltitude + INCREMENT_TAKEOFF_LANDING + fluctuation;
+            altitude.setCurrentAltitude(newAltitude);
         } else {
             altitude.changeState(new CruisingState(altitude));
         }

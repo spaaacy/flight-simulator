@@ -18,7 +18,7 @@ public class TailFlapLeftState implements TailFlapState {
         int newBearing = tailFlap.currentBearing + INCREMENT_VALUE_LEFT_RIGHT + fluctuation;
         tailFlap.sendNewBearing(newBearing);
 
-        if (newBearing - BEARING_DESTINATION > -ACCEPTED_RANGE ) {
+        if (newBearing - BEARING_DESTINATION > -ACCEPTED_DIFFERENCE) {
             tailFlap.tailFlapState = new TailFlapNeutralState(tailFlap);
         }
 

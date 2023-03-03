@@ -1,7 +1,5 @@
 package org.flightcontrol.actuator.wingflap;
 
-import java.util.Timer;
-
 import static org.flightcontrol.actuator.wingflap.WingFlap.*;
 
 public class WingFlapNeutralState implements WingFlapState {
@@ -21,10 +19,10 @@ public class WingFlapNeutralState implements WingFlapState {
         wingFlap.sendNewAltitude(newAltitude);
 
         // Plane flying too high
-        if (newAltitude - CRUISING_ALTITUDE > ACCEPTED_RANGE) {
+        if (newAltitude - CRUISING_ALTITUDE > ACCEPTED_DIFFERENCE) {
             wingFlap.wingFlapState = new WingFlapUpState(wingFlap);
         // Plane flying too low
-        } else if (newAltitude - CRUISING_ALTITUDE < -ACCEPTED_RANGE) {
+        } else if (newAltitude - CRUISING_ALTITUDE < -ACCEPTED_DIFFERENCE) {
             wingFlap.wingFlapState = new WingFlapDownState(wingFlap);
         }
     }
