@@ -49,7 +49,6 @@ public class Flight implements Runnable {
         }
     };
 
-    Phaser phaser = new Phaser(1);
     LinkedList<Observer> observers = new LinkedList<>();
     ControlSystem controlSystem;
     String flightPhase = FLIGHT_PHASE_PARKED;
@@ -92,7 +91,7 @@ public class Flight implements Runnable {
     private void setFlightPhase(String flightPhase) {
         this.flightPhase = flightPhase;
         sendNewFlightPhase(this.flightPhase);
-        phaser.arrive();
+        System.out.println("Flight: " + flightPhase);
 
         for (Observer observer : observers) {
             observer.update(FLIGHT_ID, flightPhase);
