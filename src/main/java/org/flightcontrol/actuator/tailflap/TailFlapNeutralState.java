@@ -1,6 +1,8 @@
 package org.flightcontrol.actuator.tailflap;
 
 import static org.flightcontrol.actuator.tailflap.TailFlap.*;
+import static org.flightcontrol.sensor.gps.GPS.BEARING_DESTINATION;
+import static org.flightcontrol.sensor.gps.GPS.GPS_ACCEPTED_DIFFERENCE;
 
 public class TailFlapNeutralState implements TailFlapState {
 
@@ -25,11 +27,11 @@ public class TailFlapNeutralState implements TailFlapState {
         tailFlap.sendNewBearing(newBearing);
 
         // Plane flying too far right
-        if (newBearing - BEARING_DESTINATION > ACCEPTED_DIFFERENCE) {
+        if (newBearing - BEARING_DESTINATION > GPS_ACCEPTED_DIFFERENCE) {
             tailFlap.tailFlapState = new TailFlapRightState(tailFlap);
             tailFlap.onCourse = true;
             // Plane flying too far left
-        } else if (newBearing - BEARING_DESTINATION < -ACCEPTED_DIFFERENCE) {
+        } else if (newBearing - BEARING_DESTINATION < -GPS_ACCEPTED_DIFFERENCE) {
             tailFlap.tailFlapState = new TailFlapLeftState(tailFlap);
             tailFlap.onCourse = true;
         }

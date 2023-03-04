@@ -11,14 +11,15 @@ import java.util.TimerTask;
 import java.util.concurrent.TimeoutException;
 
 import static org.flightcontrol.actuator.tailflap.TailFlap.*;
-import static org.flightcontrol.flight.Flight.FLIGHT_IDENTIFIER;
-import static org.flightcontrol.flight.Flight.TICK_RATE;
+import static org.flightcontrol.flight.Flight.*;
 
-public class GPS extends TimerTask implements Observer {
+public class GPS extends TimerTask {
 
     // Directions are in degrees (0-360)
     static final String DEGREE_SYMBOL = "°";
     public static final Integer STARTING_BEARING = 180;
+    public static final Integer GPS_ACCEPTED_DIFFERENCE = 10;
+    public static final int BEARING_DESTINATION = 290;
 
     public static final String GPS_ID = "GPS";
     public static final String GPS_EXCHANGE_NAME = "GPSExchange";
@@ -32,12 +33,17 @@ public class GPS extends TimerTask implements Observer {
     Connection connection;
     Channel channelSend;
     Channel channelReceive;
+    Channel channelFlight;
 
     // Callback to be used by Rabbit MQ receive
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         System.out.println("RECEIVED");
         setCurrentBearing(Integer.valueOf(message));
+    };
+    DeliverCallback flightCallback = (consumerTag, delivery) -> {
+        String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+        receiveFlightPhase(message);
     };
 
     @Override
@@ -53,27 +59,27 @@ public class GPS extends TimerTask implements Observer {
             connection = connectionFactory.newConnection();
             channelSend = connection.createChannel();
             channelReceive = connection.createChannel();
+            channelFlight = connection.createChannel();
         } catch (IOException | TimeoutException ignored) { }
+
+        listenForFlight();
     }
 
-    @Override
-    public void update(String... updatedValue) {
-        if (updatedValue.length != 0 && updatedValue[0].equals(FLIGHT_IDENTIFIER)) {
-            switch (updatedValue[1]) {
-                case "1" -> {
-                    setCurrentBearing(STARTING_BEARING);
-                    System.out.println("GPS: " + currentBearing + DEGREE_SYMBOL);
-                    System.out.println("GPS: Destination is at a bearing of " + BEARING_DESTINATION + DEGREE_SYMBOL);
-                }
-                case "2" -> {
-                    listenForTailFlap();
-                    timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
-                }
-                case "3" -> {
-                    try {
-                        connection.close();
-                    } catch (IOException ignored) {
-                    }
+    public void receiveFlightPhase(String flightPhase) {
+        switch (flightPhase) {
+            case FLIGHT_PHASE_TAKEOFF -> {
+                setCurrentBearing(STARTING_BEARING);
+                System.out.println("GPS: " + currentBearing + DEGREE_SYMBOL);
+                System.out.println("GPS: Destination is at a bearing of " + BEARING_DESTINATION + DEGREE_SYMBOL);
+            }
+            case FLIGHT_PHASE_CRUISING -> {
+                listenForTailFlap();
+                timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
+            }
+            case FLIGHT_PHASE_LANDING -> {
+                try {
+                    connection.close();
+                } catch (IOException ignored) {
                 }
             }
         }
@@ -85,6 +91,16 @@ public class GPS extends TimerTask implements Observer {
             String queueName = channelReceive.queueDeclare().getQueue();
             channelReceive.queueBind(queueName, TAIL_FLAP_EXCHANGE_NAME, TAIL_FLAP_EXCHANGE_KEY);
             channelReceive.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
+        } catch (IOException ignored) {}
+    }
+
+    private void listenForFlight() {
+        try {
+            channelReceive.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            String queueName = channelReceive.queueDeclare().getQueue();
+            channelReceive.queueBind(queueName, FLIGHT_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY);
+            channelReceive.basicConsume(queueName, true, flightCallback, consumerTag -> {
+            });
         } catch (IOException ignored) {}
     }
 

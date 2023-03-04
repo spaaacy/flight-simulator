@@ -10,25 +10,21 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeoutException;
 
-import static org.flightcontrol.flight.Flight.FLIGHT_IDENTIFIER;
-import static org.flightcontrol.flight.Flight.TICK_RATE;
-import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_EXCHANGE_KEY;
-import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_EXCHANGE_NAME;
+import static org.flightcontrol.flight.Flight.*;
+import static org.flightcontrol.sensor.altitude.Altitude.*;
 
 enum WingFlapDirection {UP, DOWN, NEUTRAL}
 
-public class WingFlap extends TimerTask implements Observer {
+public class WingFlap extends TimerTask {
 
     public static final String WING_FLAP_EXCHANGE_NAME = "WingFlapExchange";
     public static final String WING_FLAP_EXCHANGE_KEY = "WingFlapKey";
 
     // Plane attempts to fly 10500-11500
     public static final String WING_FLAP_ID = "WingFlap";
-    public static final Integer CRUISING_ALTITUDE = 11000;
     static final Integer MAX_FLUCTUATION_UP_DOWN = 10;
     static final Integer MAX_FLUCTUATION_NEUTRAL = 750;
     static final Integer INCREMENT_VALUE_UP_DOWN = 30;
-    static final Integer ACCEPTED_DIFFERENCE = 500;
 
     Integer currentAltitude = CRUISING_ALTITUDE;
     WingFlapState wingFlapState;
@@ -40,11 +36,16 @@ public class WingFlap extends TimerTask implements Observer {
     Connection connection;
     Channel channelReceive;
     Channel channelSend;
+    Channel channelFlight;
 
     // Callback to be used by Rabbit MQ receive
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         currentAltitude = Integer.valueOf(message);
+    };
+    DeliverCallback flightCallback = (consumerTag, delivery) -> {
+        String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+        receiveFlightPhase(message);
     };
 
 
@@ -57,10 +58,10 @@ public class WingFlap extends TimerTask implements Observer {
             connection = connectionFactory.newConnection();
             channelReceive = connection.createChannel();
             channelSend = connection.createChannel();
+            channelFlight = connection.createChannel();
         } catch (IOException | TimeoutException ignored) { }
 
-
-
+        listenForFlight();
     }
 
     @Override
@@ -77,6 +78,15 @@ public class WingFlap extends TimerTask implements Observer {
         } catch (IOException ignored) { }
     }
 
+    private void listenForFlight() {
+        try {
+            channelReceive.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            String queueName = channelReceive.queueDeclare().getQueue();
+            channelReceive.queueBind(queueName, FLIGHT_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY);
+            channelReceive.basicConsume(queueName, true, flightCallback, consumerTag -> {
+            });
+        } catch (IOException ignored) {}
+    }
     protected void sendNewAltitude(Integer newAltitude) {
         try {
             channelSend.exchangeDeclare(WING_FLAP_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
@@ -85,23 +95,20 @@ public class WingFlap extends TimerTask implements Observer {
         } catch (IOException ignored) {}
     }
 
-    @Override
-    public void update(String... updatedValue) {
-        if (updatedValue.length != 0 && updatedValue[0].equals(FLIGHT_IDENTIFIER)){
-            switch (updatedValue[1]) {
-                case "1" -> setDirection(WingFlapDirection.DOWN);
-                case "2" -> {
-                    listenForAltitude();
-                    wingFlapState = new WingFlapNeutralState(this);
-                    timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
-                }
-                case "3" -> {
-                    timer.cancel();
-                    setDirection(WingFlapDirection.UP);
-                    try {
-                        connection.close();
-                    } catch (IOException ignored) {
-                    }
+    public void receiveFlightPhase(String flightPhase) {
+        switch (flightPhase) {
+            case FLIGHT_PHASE_TAKEOFF -> setDirection(WingFlapDirection.DOWN);
+            case FLIGHT_PHASE_CRUISING -> {
+                listenForAltitude();
+                wingFlapState = new WingFlapNeutralState(this);
+                timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
+            }
+            case FLIGHT_PHASE_LANDING -> {
+                timer.cancel();
+                setDirection(WingFlapDirection.UP);
+                try {
+                    connection.close();
+                } catch (IOException ignored) {
                 }
             }
         }

@@ -3,6 +3,7 @@ package org.flightcontrol;
 import org.flightcontrol.flight.Flight;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.util.LinkedList;
 import java.util.Scanner;
@@ -61,17 +62,16 @@ public class ControlSystem implements Observer {
 
     private void gui() {
 
-        LinkedList<JLabel> jLabels = new LinkedList<>();
+        LinkedList<JLabel> labels = new LinkedList<>();
 
         JFrame jFrame = new JFrame("Flight Control System");
-        JPanel 
+        JPanel mainPanel = new JPanel(new BorderLayout());
         JPanel jPanel = new JPanel(new GridLayout(4, 2));
-        jFrame.setSize(400, 400);
+        jFrame.setSize(600, 400);
 
-        JPanel titlePanel = new JPanel();
         JLabel title = new JLabel("Boeing 777 Control System");
-        title.setFont(new Font("Arial", Font.BOLD, 35));
-        titlePanel.add(title);
+        title.setFont(new Font("Arial", Font.BOLD, 30));
+        title.setHorizontalAlignment(SwingConstants.CENTER);
 
         JLabel altitudeLabel = new JLabel("Altitude:");
         JLabel wingFlapLabel = new JLabel("Wing Flaps:");
@@ -83,27 +83,27 @@ public class ControlSystem implements Observer {
         gpsValue = new JLabel();
         tailFlapValue = new JLabel();
 
-        // Add all JLabel to linked list
-        jLabels.add(altitudeLabel);
-        jLabels.add(altitudeValue);
-        jLabels.add(wingFlapLabel);
-        jLabels.add(wingFlapValue);
-        jLabels.add(gpsLabel);
-        jLabels.add(gpsValue);
-        jLabels.add(tailFlapLabel);
-        jLabels.add(tailFlapValue);
+        // Add all JLabels to linked list
+        labels.add(altitudeLabel);
+        labels.add(altitudeValue);
+        labels.add(wingFlapLabel);
+        labels.add(wingFlapValue);
+        labels.add(gpsLabel);
+        labels.add(gpsValue);
+        labels.add(tailFlapLabel);
+        labels.add(tailFlapValue);
 
         // Set parameters for JLabels
-        for (JLabel jLabel: jLabels) {
-            jLabel.setHorizontalAlignment(SwingConstants.CENTER);
-            jLabel.setHorizontalAlignment(SwingConstants.CENTER);
-            jLabel.setFont(new Font("Arial", Font.BOLD, 25));
-            jPanel.add(jLabel);
+        for (JLabel label: labels) {
+            label.setHorizontalAlignment(SwingConstants.CENTER);
+            label.setFont(new Font("Courier", Font.PLAIN, 20));
+            jPanel.add(label);
         }
 
 
-        jFrame.add(titlePanel);
-        jFrame.add(jPanel);
+        mainPanel.add(title, BorderLayout.PAGE_START);
+        mainPanel.add(jPanel, BorderLayout.CENTER);
+        jFrame.add(mainPanel);
         jFrame.setVisible(true);
 
     }

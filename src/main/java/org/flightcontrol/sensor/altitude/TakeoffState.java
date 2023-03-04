@@ -3,7 +3,6 @@ package org.flightcontrol.sensor.altitude;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static org.flightcontrol.actuator.wingflap.WingFlap.CRUISING_ALTITUDE;
 import static org.flightcontrol.flight.Flight.TICK_RATE;
 import static org.flightcontrol.sensor.altitude.Altitude.*;
 
