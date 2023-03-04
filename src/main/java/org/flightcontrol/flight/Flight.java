@@ -39,8 +39,12 @@ public class Flight implements Runnable {
     // Callback to be used by Rabbit MQ receive
     DeliverCallback altitudeCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-        if (message.equals(CRUISING_FLAG)){
-            setFlightPhase(FLIGHT_PHASE_CRUISING);
+        switch (message) {
+            case CRUISING_FLAG -> setFlightPhase(FLIGHT_PHASE_CRUISING);
+            case LANDED_FLAG -> {
+                setFlightPhase(FLIGHT_PHASE_LANDED);
+                connection.close();
+            }
         }
     };
 
@@ -93,14 +97,8 @@ public class Flight implements Runnable {
     }
 
     public void initiateLanding() {
-        if (phaser.getPhase() == 2) {
+        if (flightPhase.equals(FLIGHT_PHASE_CRUISING)) {
             setFlightPhase(FLIGHT_PHASE_LANDING);
-
-            phaser.arriveAndAwaitAdvance();
-            setFlightPhase(FLIGHT_PHASE_LANDED);
-            try {
-                connection.close();
-            } catch (IOException ignored) {}
         }
     }
 

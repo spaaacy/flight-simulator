@@ -5,6 +5,8 @@ import org.flightcontrol.flight.Flight;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.Timer;
@@ -28,25 +30,13 @@ public class ControlSystem implements Observer {
     JLabel tailFlapValue;
 
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        Timer timer = new Timer();
         ControlSystem controlSystem = new ControlSystem();
         Flight flight = new Flight(controlSystem);
 
+        controlSystem.gui(flight);
+
         ScheduledExecutorService flightControlSystem = Executors.newScheduledThreadPool(1);
         flightControlSystem.submit(flight);
-
-        TimerTask landingTask = new TimerTask() {
-            @Override
-            public void run() {
-                scanner.nextLine();
-                flight.initiateLanding();
-            }
-        };
-        timer.scheduleAtFixedRate(landingTask, 500L, 500L);
-
-        controlSystem.gui();
-
     }
 
     @Override
@@ -62,7 +52,7 @@ public class ControlSystem implements Observer {
         }
     }
 
-    private void gui() {
+    private void gui(Flight flight) {
 
         LinkedList<JLabel> labels = new LinkedList<>();
 
@@ -74,6 +64,8 @@ public class ControlSystem implements Observer {
         JLabel title = new JLabel("Boeing 777 Control System");
         title.setFont(new Font("Arial", Font.BOLD, 30));
         title.setHorizontalAlignment(SwingConstants.CENTER);
+
+        JPanel buttons = new JPanel();
 
         JLabel flightLabel = new JLabel("Phase:");
         JLabel altitudeLabel = new JLabel("Altitude:");
@@ -106,9 +98,21 @@ public class ControlSystem implements Observer {
             jPanel.add(label);
         }
 
+        JButton landingButton = new JButton("Initiate Landing");
+        landingButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                flight.initiateLanding();
+            }
+        });
+
+        landingButton.setSize(150, 75);
+        buttons.add(landingButton);
+
 
         mainPanel.add(title, BorderLayout.PAGE_START);
         mainPanel.add(jPanel, BorderLayout.CENTER);
+        mainPanel.add(buttons, BorderLayout.PAGE_END);
         jFrame.add(mainPanel);
         jFrame.setVisible(true);
 

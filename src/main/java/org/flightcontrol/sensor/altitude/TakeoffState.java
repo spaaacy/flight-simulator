@@ -22,7 +22,8 @@ public class TakeoffState implements AltitudeState {
             Integer newAltitude = altitude.currentAltitude + INCREMENT_TAKEOFF_LANDING + fluctuation;
             altitude.setCurrentAltitude(newAltitude);
         } else {
-            altitude.changeState(new CruisingState(altitude));
+            altitude.altitudeState = new CruisingState(altitude);
+            altitude.sendNewState(CRUISING_FLAG);
         }
 
         System.out.println("Altitude: " + altitude.currentAltitude);
