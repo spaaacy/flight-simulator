@@ -7,12 +7,13 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeoutException;
 
 import static org.flightcontrol.flight.Flight.*;
 
-public class Altitude implements Runnable {
+public class Altitude extends TimerTask {
 
     public static final String ALTITUDE_ID = "Altitude";
     public static final String CRUISING_FLAG = "Cruising";
@@ -24,7 +25,6 @@ public class Altitude implements Runnable {
     public static final String ALTITUDE_EXCHANGE_NAME = "AltitudeExchange";
     public static final String ALTITUDE_EXCHANGE_KEY = "AltitudeKey";
 
-    Phaser phaser;
     Integer currentAltitude = 0;
     AltitudeState altitudeState;
     LinkedList<Observer> observers = new LinkedList<>();;
@@ -39,41 +39,40 @@ public class Altitude implements Runnable {
         receiveFlightPhase(message);
     };
 
-    public Altitude(Phaser phaser) {
-        this.phaser = phaser;
-        phaser.register();
+    public Altitude() {
 
         try {
             ConnectionFactory connectionFactory = new ConnectionFactory();
             connection = connectionFactory.newConnection();
             channelFlight = connection.createChannel();
+            channelAltitude = connection.createChannel();
         } catch (IOException | TimeoutException ignored) {}
+
+        listenForFlight();
     }
 
     @Override
     public void run() {
-        phaser.arriveAndAwaitAdvance();
-        listenForFlight();
-        changeState(new TakeoffState(this));
-    }
-
-    public void changeState(AltitudeState newAltitudeState) {
-        if (altitudeState != null) {
-            altitudeState.stopExecuting();
-        }
-
-        this.altitudeState = newAltitudeState;
-        sendNewState();
-
         altitudeState.generateAltitude();
     }
 
+    public void changeState(AltitudeState newAltitudeState) {
+        this.altitudeState = newAltitudeState;
+        sendNewState();
+    }
+
     public void receiveFlightPhase(String flightPhase) {
-        if (flightPhase.equals(FLIGHT_PHASE_LANDING)) {
-            changeState(new LandingState(this));
-            try {
-                connection.close();
-            } catch (IOException ignored) {}
+        switch (flightPhase) {
+            case FLIGHT_PHASE_TAKEOFF -> {
+                changeState(new TakeoffState(this));
+                timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
+            }
+            case FLIGHT_PHASE_LANDING -> {
+                changeState(new LandingState(this));
+                try {
+                    connection.close();
+                } catch (IOException ignored) {}
+            }
         }
     }
 

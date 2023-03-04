@@ -14,10 +14,9 @@ import static org.flightcontrol.flight.Flight.TICK_RATE;
 import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_EXCHANGE_KEY;
 import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_EXCHANGE_NAME;
 
-public class CruisingState extends TimerTask implements AltitudeState {
+public class CruisingState implements AltitudeState {
 
     Altitude altitude;
-    Timer timer = new Timer();
 
     // RabbitMQ variables
     Connection connection;
@@ -46,7 +45,7 @@ public class CruisingState extends TimerTask implements AltitudeState {
     }
 
     @Override
-    public void run() {
+    public void generateAltitude() {
         sendCurrentAltitude();
         System.out.println("Altitude: " + altitude.currentAltitude);
     }
@@ -66,21 +65,6 @@ public class CruisingState extends TimerTask implements AltitudeState {
             String message = altitude.currentAltitude.toString();
             channelSend.basicPublish(ALTITUDE_EXCHANGE_NAME, ALTITUDE_EXCHANGE_KEY, null, message.getBytes());
         } catch (IOException ignored) { }
-    }
-
-    @Override
-    public void generateAltitude() {
-        altitude.phaser.arriveAndAwaitAdvance(); // First arrive to go into phase 2: Cruising
-        altitude.phaser.arrive(); // Second arrive to give thumbs-up for phase 3: Landing
-        timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
-    }
-
-    @Override
-    public void stopExecuting() {
-        timer.cancel();
-        try {
-            connection.close();
-        } catch (IOException ignored) {}
     }
 
 }

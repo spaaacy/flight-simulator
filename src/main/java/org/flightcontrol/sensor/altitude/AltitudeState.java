@@ -4,5 +4,4 @@ import java.util.TimerTask;
 
 public interface AltitudeState {
     public void generateAltitude();
-    public void stopExecuting();
 }

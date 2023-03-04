@@ -77,6 +77,7 @@ public class GPS extends TimerTask {
                 timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
             }
             case FLIGHT_PHASE_LANDING -> {
+                timer.cancel();
                 try {
                     connection.close();
                 } catch (IOException ignored) {

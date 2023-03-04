@@ -25,11 +25,11 @@ public class Flight implements Runnable {
     public static final String FLIGHT_PHASE_LANDING = "LANDING";
     public static final String FLIGHT_PHASE_LANDED = "LANDED";
 
-    public static final String FLIGHT_IDENTIFIER = "Flight";
+    public static final String FLIGHT_ID = "Flight";
     public static final String FLIGHT_EXCHANGE_NAME = "FlightExchange";
     public static final String FLIGHT_EXCHANGE_KEY = "FlightKey";
     public static final String PHASE_EXCHANGE_KEY = "PhaseKey";
-    public static final Long TICK_RATE = 250L;
+    public static final Long TICK_RATE = 150L;
 
     // RabbitMQ variables
     Connection connection;
@@ -41,7 +41,6 @@ public class Flight implements Runnable {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         if (message.equals(CRUISING_FLAG)){
             setFlightPhase(FLIGHT_PHASE_CRUISING);
-            System.out.println("Flight: CRUISING");
         }
     };
 
@@ -51,7 +50,7 @@ public class Flight implements Runnable {
     String flightPhase = FLIGHT_PHASE_PARKED;
 
     // Sensors
-    Altitude altitude = new Altitude(phaser);
+    Altitude altitude = new Altitude();
     GPS gps = new GPS();
 
     // Actuators
@@ -63,6 +62,7 @@ public class Flight implements Runnable {
         this.controlSystem = controlSystem;
 
         // Objects observed by control system for GUI
+        addObserver(controlSystem);
         altitude.addObserver(controlSystem);
         wingFlap.addObserver(controlSystem);
         gps.addObserver(controlSystem);
@@ -72,14 +72,14 @@ public class Flight implements Runnable {
             ConnectionFactory connectionFactory = new ConnectionFactory();
             connection = connectionFactory.newConnection();
             channelFlight = connection.createChannel();
+            channelAltitude = connection.createChannel();
         } catch (IOException | TimeoutException ignored) {}
     }
 
     @Override
     public void run() {
-        listenForAltitude();
         setFlightPhase(FLIGHT_PHASE_TAKEOFF);
-        System.out.println("Flight: TAKING OFF");
+        listenForAltitude();
     }
 
     private void setFlightPhase(String flightPhase) {
@@ -88,18 +88,16 @@ public class Flight implements Runnable {
         phaser.arrive();
 
         for (Observer observer : observers) {
-            observer.update(FLIGHT_IDENTIFIER, flightPhase);
+            observer.update(FLIGHT_ID, flightPhase);
         }
     }
 
     public void initiateLanding() {
         if (phaser.getPhase() == 2) {
             setFlightPhase(FLIGHT_PHASE_LANDING);
-            System.out.println("Flight: LANDING");
 
             phaser.arriveAndAwaitAdvance();
             setFlightPhase(FLIGHT_PHASE_LANDED);
-            System.out.println("Flight: LANDED");
             try {
                 connection.close();
             } catch (IOException ignored) {}
@@ -123,6 +121,10 @@ public class Flight implements Runnable {
     }
     public Altitude getAltitude() {
         return altitude;
+    }
+
+    private void addObserver(Observer observer) {
+        observers.add(observer);
     }
 
 

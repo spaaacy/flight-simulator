@@ -15,11 +15,13 @@ import java.util.concurrent.TimeUnit;
 
 import static org.flightcontrol.actuator.tailflap.TailFlap.TAIL_FLAP_ID;
 import static org.flightcontrol.actuator.wingflap.WingFlap.WING_FLAP_ID;
+import static org.flightcontrol.flight.Flight.FLIGHT_ID;
 import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_ID;
 import static org.flightcontrol.sensor.gps.GPS.GPS_ID;
 
 public class ControlSystem implements Observer {
 
+    JLabel flightValue;
     JLabel altitudeValue;
     JLabel wingFlapValue;
     JLabel gpsValue;
@@ -31,9 +33,8 @@ public class ControlSystem implements Observer {
         ControlSystem controlSystem = new ControlSystem();
         Flight flight = new Flight(controlSystem);
 
-        ScheduledExecutorService flightControlSystem = Executors.newScheduledThreadPool(2);
-        flightControlSystem.schedule(flight, 500L, TimeUnit.MILLISECONDS); // Delay to prevent race-condition with phaser
-        flightControlSystem.submit(flight.getAltitude());
+        ScheduledExecutorService flightControlSystem = Executors.newScheduledThreadPool(1);
+        flightControlSystem.submit(flight);
 
         TimerTask landingTask = new TimerTask() {
             @Override
@@ -52,6 +53,7 @@ public class ControlSystem implements Observer {
     public void update(String... updatedValue) {
         if (updatedValue.length != 0) {
             switch (updatedValue[0]) {
+                case FLIGHT_ID -> flightValue.setText(updatedValue[1]);
                 case ALTITUDE_ID -> altitudeValue.setText(updatedValue[1]);
                 case WING_FLAP_ID -> wingFlapValue.setText(updatedValue[1]);
                 case GPS_ID -> gpsValue.setText(updatedValue[1]);
@@ -66,24 +68,28 @@ public class ControlSystem implements Observer {
 
         JFrame jFrame = new JFrame("Flight Control System");
         JPanel mainPanel = new JPanel(new BorderLayout());
-        JPanel jPanel = new JPanel(new GridLayout(4, 2));
+        JPanel jPanel = new JPanel(new GridLayout(5, 2));
         jFrame.setSize(600, 400);
 
         JLabel title = new JLabel("Boeing 777 Control System");
         title.setFont(new Font("Arial", Font.BOLD, 30));
         title.setHorizontalAlignment(SwingConstants.CENTER);
 
+        JLabel flightLabel = new JLabel("Phase:");
         JLabel altitudeLabel = new JLabel("Altitude:");
         JLabel wingFlapLabel = new JLabel("Wing Flaps:");
         JLabel gpsLabel = new JLabel("GPS:");
         JLabel tailFlapLabel = new JLabel("Tail Flap:");
 
+        flightValue = new JLabel();
         altitudeValue = new JLabel();
         wingFlapValue = new JLabel();
         gpsValue = new JLabel();
         tailFlapValue = new JLabel();
 
         // Add all JLabels to linked list
+        labels.add(flightLabel);
+        labels.add(flightValue);
         labels.add(altitudeLabel);
         labels.add(altitudeValue);
         labels.add(wingFlapLabel);
