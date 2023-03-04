@@ -5,11 +5,12 @@ import org.flightcontrol.Observer;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeoutException;
 
+import static org.flightcontrol.flight.Flight.FLIGHT_IDENTIFIER;
 import static org.flightcontrol.flight.Flight.TICK_RATE;
 import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_EXCHANGE_KEY;
 import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_EXCHANGE_NAME;
@@ -22,6 +23,7 @@ public class WingFlap extends TimerTask implements Observer {
     public static final String WING_FLAP_EXCHANGE_KEY = "WingFlapKey";
 
     // Plane attempts to fly 10500-11500
+    public static final String WING_FLAP_ID = "WingFlap";
     public static final Integer CRUISING_ALTITUDE = 11000;
     static final Integer MAX_FLUCTUATION_UP_DOWN = 10;
     static final Integer MAX_FLUCTUATION_NEUTRAL = 750;
@@ -29,10 +31,10 @@ public class WingFlap extends TimerTask implements Observer {
     static final Integer ACCEPTED_DIFFERENCE = 500;
 
     Integer currentAltitude = CRUISING_ALTITUDE;
-    Phaser phaser;
     WingFlapState wingFlapState;
     WingFlapDirection wingFlapDirection;
     Timer timer = new Timer();
+    LinkedList<Observer> observers = new LinkedList<>();
 
     // RabbitMQ variables
     Connection connection;
@@ -47,8 +49,7 @@ public class WingFlap extends TimerTask implements Observer {
 
 
 
-    public WingFlap(Phaser phaser) {
-        this.phaser = phaser;
+    public WingFlap() {
 
         // Create channels for Rabbit MQ
         try {
@@ -86,25 +87,35 @@ public class WingFlap extends TimerTask implements Observer {
 
     @Override
     public void update(String... updatedValue) {
-        switch (phaser.getPhase()) {
-            case 1 -> setDirection(WingFlapDirection.DOWN);
-            case 2 -> {
-                listenForAltitude();
-                wingFlapState = new WingFlapNeutralState(this);
-                timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
-            }
-            case 3 -> {
-                timer.cancel();
-                setDirection(WingFlapDirection.UP);
-                try {
-                    connection.close();
-                } catch (IOException ignored) {}
+        if (updatedValue.length != 0 && updatedValue[0].equals(FLIGHT_IDENTIFIER)){
+            switch (updatedValue[1]) {
+                case "1" -> setDirection(WingFlapDirection.DOWN);
+                case "2" -> {
+                    listenForAltitude();
+                    wingFlapState = new WingFlapNeutralState(this);
+                    timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
+                }
+                case "3" -> {
+                    timer.cancel();
+                    setDirection(WingFlapDirection.UP);
+                    try {
+                        connection.close();
+                    } catch (IOException ignored) {
+                    }
+                }
             }
         }
+    }
+
+    public void addObserver(Observer observer) {
+        observers.add(observer);
     }
 
     public void setDirection(WingFlapDirection wingFlapDirection) {
         this.wingFlapDirection = wingFlapDirection;
         System.out.println("WingFlap: " + wingFlapDirection.toString());
+        for (Observer observer : observers) {
+            observer.update(WING_FLAP_ID, wingFlapDirection.toString());
+        }
     }
 }

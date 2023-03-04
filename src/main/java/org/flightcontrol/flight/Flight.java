@@ -1,11 +1,10 @@
 package org.flightcontrol.flight;
 
+import org.flightcontrol.ControlSystem;
 import org.flightcontrol.Observer;
 import org.flightcontrol.actuator.tailflap.TailFlap;
-import org.flightcontrol.actuator.tailflap.TailFlapRightState;
 import org.flightcontrol.actuator.wingflap.WingFlap;
 import org.flightcontrol.sensor.altitude.Altitude;
-import org.flightcontrol.sensor.altitude.CruisingState;
 import org.flightcontrol.sensor.gps.GPS;
 
 import java.util.LinkedList;
@@ -13,31 +12,44 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Phaser;
 
+import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_ID;
+import static org.flightcontrol.sensor.altitude.Altitude.CRUISING_FLAG;
+
 public class Flight implements Runnable, Observer {
 
+    public static final String FLIGHT_IDENTIFIER = "Flight";
     public static final Long TICK_RATE = 250L;
 
     Phaser phaser = new Phaser(1);
     LinkedList<Observer> observers = new LinkedList<>();
     Timer timer = new Timer();
+    ControlSystem controlSystem;
 
     // Sensors
     Altitude altitude = new Altitude(phaser);
-    GPS gps = new GPS(phaser);
+    GPS gps = new GPS();
 
     // Actuators
-    WingFlap wingFlap = new WingFlap(phaser);
-    TailFlap tailFlap = new TailFlap(phaser);
+    WingFlap wingFlap = new WingFlap();
+    TailFlap tailFlap = new TailFlap();
 
 
-    public Flight() {
+    public Flight(ControlSystem controlSystem) {
+        this.controlSystem = controlSystem;
+
+        altitude.addObserver(this);
+
         // Objects observing flight phase
         addObserver(altitude);
         addObserver(wingFlap);
         addObserver(gps);
         addObserver(tailFlap);
 
-        altitude.addObserver(this);
+        // Objects observed by control system for GUI
+        altitude.addObserver(controlSystem);
+        wingFlap.addObserver(controlSystem);
+        gps.addObserver(controlSystem);
+        tailFlap.addObserver(controlSystem);
     }
 
     @Override
@@ -53,7 +65,7 @@ public class Flight implements Runnable, Observer {
             @Override
             public void run() {
                 for (Observer observer : observers) {
-                    observer.update();
+                    observer.update(FLIGHT_IDENTIFIER, Integer.toString(phaser.getPhase()));
                 }
             }
         };
@@ -72,7 +84,7 @@ public class Flight implements Runnable, Observer {
 
     @Override
     public void update(String... updatedValue) {
-        if (altitude.getAltitudeState().getClass().equals(CruisingState.class)) {
+        if (updatedValue.length != 0 && updatedValue[0].equals(CRUISING_FLAG)) {
             nextPhase();
             System.out.println("Flight: CRUISING");
         }

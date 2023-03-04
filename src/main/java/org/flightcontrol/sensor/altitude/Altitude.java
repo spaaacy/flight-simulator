@@ -6,9 +6,12 @@ import java.util.LinkedList;
 import java.util.Timer;
 import java.util.concurrent.Phaser;
 
+import static org.flightcontrol.flight.Flight.FLIGHT_IDENTIFIER;
+
 public class Altitude implements Runnable, Observer {
 
-    public static final String ALTITUDE_CLASS_NAME = "Altitude";
+    public static final String ALTITUDE_ID = "Altitude";
+    public static final String CRUISING_FLAG = "Cruising";
     static final Integer INCREMENT_TAKEOFF_LANDING = 500;
     static final Integer MAX_FLUCTUATION_TAKEOFF_LANDING = 100;
     public static final String ALTITUDE_EXCHANGE_NAME = "AltitudeExchange";
@@ -37,8 +40,10 @@ public class Altitude implements Runnable, Observer {
         }
 
         this.altitudeState = newAltitudeState;
-        for (Observer observer : observers) {
-            observer.update();
+        if (altitudeState.getClass().equals(CruisingState.class)){
+            for (Observer observer : observers) {
+                observer.update(CRUISING_FLAG);
+            }
         }
 
         altitudeState.generateAltitude();
@@ -46,23 +51,22 @@ public class Altitude implements Runnable, Observer {
 
     @Override
     public void update(String... updatedValue) {
-        if (phaser.getPhase() == 3) {
+        if (updatedValue.length != 0 &&
+                updatedValue[0].equals(FLIGHT_IDENTIFIER) &&
+                updatedValue[1].equals("3")) {
             changeState(new LandingState(this));
         }
     }
+
 
     public void addObserver(Observer observer) {
         observers.add(observer);
     }
 
-    public AltitudeState getAltitudeState() {
-        return altitudeState;
-    }
-
     public void setCurrentAltitude(Integer currentAltitude) {
         this.currentAltitude = currentAltitude;
         for (Observer observer : observers) {
-            observer.update(ALTITUDE_CLASS_NAME, currentAltitude.toString());
+            observer.update(ALTITUDE_ID, currentAltitude.toString());
         }
     }
 }

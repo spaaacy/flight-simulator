@@ -5,11 +5,13 @@ import org.flightcontrol.Observer;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeoutException;
 
+import static org.flightcontrol.flight.Flight.FLIGHT_IDENTIFIER;
 import static org.flightcontrol.flight.Flight.TICK_RATE;
 import static org.flightcontrol.sensor.gps.GPS.*;
 
@@ -17,6 +19,7 @@ enum TailFlapDirection {LEFT, RIGHT, NEUTRAL};
 
 public class TailFlap extends TimerTask implements Observer {
 
+    public static final String TAIL_FLAP_ID = "TailFlapNeutralState";
     public static final String TAIL_FLAP_EXCHANGE_NAME = "TailFlapExchange";
     public static final String TAIL_FLAP_EXCHANGE_KEY = "TailFlapKey";
 
@@ -26,8 +29,8 @@ public class TailFlap extends TimerTask implements Observer {
     static final Integer INCREMENT_VALUE_LEFT_RIGHT = 4;
     static final Integer ACCEPTED_DIFFERENCE = 10;
 
-    Phaser phaser;
     Timer timer = new Timer();
+    LinkedList<Observer> observers = new LinkedList<>();
     Integer currentBearing = STARTING_BEARING;
     TailFlapDirection tailFlapDirection;
     TailFlapState tailFlapState;
@@ -44,9 +47,7 @@ public class TailFlap extends TimerTask implements Observer {
         currentBearing = Integer.valueOf(message);
     };
 
-    public TailFlap(Phaser phaser) {
-        this.phaser = phaser;
-
+    public TailFlap() {
         try {
             ConnectionFactory connectionFactory = new ConnectionFactory();
             connection = connectionFactory.newConnection();
@@ -63,19 +64,23 @@ public class TailFlap extends TimerTask implements Observer {
 
     @Override
     public void update(String... updatedValue) {
-        switch (phaser.getPhase()) {
-            case 1 -> setTailFlapDirection(TailFlapDirection.NEUTRAL);
-            case 2 -> {
-                listenForGPS();
-                tailFlapState = new TailFlapNeutralState(this);
-                timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
-            }
-            case 3 -> {
-                timer.cancel();
-                setTailFlapDirection(TailFlapDirection.NEUTRAL);
-                try {
-                    connection.close();
-                } catch (IOException ignored) {}
+        if (updatedValue.length != 0 && updatedValue[0].equals(FLIGHT_IDENTIFIER)) {
+            switch (updatedValue[1]) {
+                case "1" -> setTailFlapDirection(TailFlapDirection.NEUTRAL);
+                case "2" -> {
+                    listenForGPS();
+                    tailFlapState = new TailFlapNeutralState(this);
+                    timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
+                }
+                case "3" -> {
+                    System.out.println("CLOSED");
+                    timer.cancel();
+                    setTailFlapDirection(TailFlapDirection.NEUTRAL);
+                    try {
+                        connection.close();
+                    } catch (IOException ignored) {
+                    }
+                }
             }
         }
     }
@@ -83,6 +88,9 @@ public class TailFlap extends TimerTask implements Observer {
     public void setTailFlapDirection(TailFlapDirection tailFlapDirection) {
         this.tailFlapDirection = tailFlapDirection;
         System.out.println("TailFlap: " + tailFlapDirection.toString());
+        for (Observer observer : observers) {
+            observer.update(TAIL_FLAP_ID, tailFlapDirection.toString());
+        }
     }
 
     private void listenForGPS() {
@@ -100,5 +108,9 @@ public class TailFlap extends TimerTask implements Observer {
             String message = newDirection.toString();
             channelSend.basicPublish(TAIL_FLAP_EXCHANGE_NAME, TAIL_FLAP_EXCHANGE_KEY, null, message.getBytes());
         } catch (IOException ignored) {}
+    }
+
+    public void addObserver(Observer observer) {
+        observers.add(observer);
     }
 }

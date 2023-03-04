@@ -5,12 +5,13 @@ import org.flightcontrol.Observer;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeoutException;
 
 import static org.flightcontrol.actuator.tailflap.TailFlap.*;
+import static org.flightcontrol.flight.Flight.FLIGHT_IDENTIFIER;
 import static org.flightcontrol.flight.Flight.TICK_RATE;
 
 public class GPS extends TimerTask implements Observer {
@@ -19,12 +20,13 @@ public class GPS extends TimerTask implements Observer {
     static final String DEGREE_SYMBOL = "°";
     public static final Integer STARTING_BEARING = 180;
 
+    public static final String GPS_ID = "GPS";
     public static final String GPS_EXCHANGE_NAME = "GPSExchange";
     public static final String GPS_EXCHANGE_KEY = "GPSKey";
 
-    Phaser phaser;
-    Integer currentBearing = STARTING_BEARING;
+    Integer currentBearing;
     Timer timer = new Timer();
+    LinkedList<Observer> observers = new LinkedList<>();
 
     // RabbitMQ variables
     Connection connection;
@@ -34,7 +36,8 @@ public class GPS extends TimerTask implements Observer {
     // Callback to be used by Rabbit MQ receive
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-        currentBearing = Integer.valueOf(message);
+        System.out.println("RECEIVED");
+        setCurrentBearing(Integer.valueOf(message));
     };
 
     @Override
@@ -43,8 +46,7 @@ public class GPS extends TimerTask implements Observer {
         System.out.println("GPS: " + currentBearing + DEGREE_SYMBOL);
     }
 
-    public GPS(Phaser phaser) {
-        this.phaser = phaser;
+    public GPS() {
 
         try {
             ConnectionFactory connectionFactory = new ConnectionFactory();
@@ -56,19 +58,23 @@ public class GPS extends TimerTask implements Observer {
 
     @Override
     public void update(String... updatedValue) {
-        switch (phaser.getPhase()) {
-            case 1 -> {
-                System.out.println("GPS: " + currentBearing + DEGREE_SYMBOL);
-                System.out.println("GPS: Destination is at a bearing of " + BEARING_DESTINATION + DEGREE_SYMBOL);
-            }
-            case 2 -> {
-                listenForTailFlap();
-                timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
-            }
-            case 3 -> {
-                try {
-                    connection.close();
-                } catch (IOException ignored) {}
+        if (updatedValue.length != 0 && updatedValue[0].equals(FLIGHT_IDENTIFIER)) {
+            switch (updatedValue[1]) {
+                case "1" -> {
+                    setCurrentBearing(STARTING_BEARING);
+                    System.out.println("GPS: " + currentBearing + DEGREE_SYMBOL);
+                    System.out.println("GPS: Destination is at a bearing of " + BEARING_DESTINATION + DEGREE_SYMBOL);
+                }
+                case "2" -> {
+                    listenForTailFlap();
+                    timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
+                }
+                case "3" -> {
+                    try {
+                        connection.close();
+                    } catch (IOException ignored) {
+                    }
+                }
             }
         }
     }
@@ -90,4 +96,14 @@ public class GPS extends TimerTask implements Observer {
         } catch (IOException ignored) {}
     }
 
+    public void addObserver(Observer observer) {
+        observers.add(observer);
+    }
+
+    public void setCurrentBearing(Integer currentBearing) {
+        this.currentBearing = currentBearing;
+        for (Observer observer : observers) {
+            observer.update(GPS_ID, currentBearing.toString() + DEGREE_SYMBOL);
+        }
+    }
 }
