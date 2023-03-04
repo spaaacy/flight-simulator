@@ -3,17 +3,12 @@ package org.flightcontrol;
 import org.flightcontrol.flight.Flight;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.LinkedList;
-import java.util.Scanner;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import static org.flightcontrol.actuator.tailflap.TailFlap.TAIL_FLAP_ID;
 import static org.flightcontrol.actuator.wingflap.WingFlap.WING_FLAP_ID;
@@ -21,6 +16,7 @@ import static org.flightcontrol.flight.Flight.FLIGHT_ID;
 import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_ID;
 import static org.flightcontrol.sensor.gps.GPS.GPS_ID;
 
+// TODO: User constructor for GUI
 public class ControlSystem implements Observer {
 
     JLabel flightValue;
@@ -55,6 +51,7 @@ public class ControlSystem implements Observer {
     private void gui(Flight flight) {
 
         LinkedList<JLabel> labels = new LinkedList<>();
+        LinkedList<JButton> buttons = new LinkedList<>();
 
         JFrame jFrame = new JFrame("Flight Control System");
         JPanel mainPanel = new JPanel(new BorderLayout());
@@ -65,7 +62,7 @@ public class ControlSystem implements Observer {
         title.setFont(new Font("Arial", Font.BOLD, 30));
         title.setHorizontalAlignment(SwingConstants.CENTER);
 
-        JPanel buttons = new JPanel();
+        JPanel buttonPanel = new JPanel();
 
         JLabel flightLabel = new JLabel("Phase:");
         JLabel altitudeLabel = new JLabel("Altitude:");
@@ -98,6 +95,18 @@ public class ControlSystem implements Observer {
             jPanel.add(label);
         }
 
+        /*
+         Buttons
+         */
+        JButton takeoffButton = new JButton("Initiate Takeoff");
+        takeoffButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                flight.initiateTakeoff();
+            }
+        });
+        buttons.add(takeoffButton);
+
         JButton landingButton = new JButton("Initiate Landing");
         landingButton.addActionListener(new ActionListener() {
             @Override
@@ -105,14 +114,16 @@ public class ControlSystem implements Observer {
                 flight.initiateLanding();
             }
         });
-
-        landingButton.setSize(150, 75);
         buttons.add(landingButton);
+
+        for (JButton button : buttons){
+            buttonPanel.add(button);
+        }
 
 
         mainPanel.add(title, BorderLayout.PAGE_START);
         mainPanel.add(jPanel, BorderLayout.CENTER);
-        mainPanel.add(buttons, BorderLayout.PAGE_END);
+        mainPanel.add(buttonPanel, BorderLayout.PAGE_END);
         jFrame.add(mainPanel);
         jFrame.setVisible(true);
 

@@ -48,7 +48,7 @@ public class WingFlap extends TimerTask {
         receiveFlightPhase(message);
     };
 
-
+        // TODO: Listen for landed
 
     public WingFlap() {
 
@@ -106,6 +106,9 @@ public class WingFlap extends TimerTask {
             case FLIGHT_PHASE_LANDING -> {
                 timer.cancel();
                 setDirection(WingFlapDirection.UP);
+            }
+            case FLIGHT_PHASE_LANDED -> {
+                setDirection(WingFlapDirection.NEUTRAL);
                 try {
                     connection.close();
                 } catch (IOException ignored) {

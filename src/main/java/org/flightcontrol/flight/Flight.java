@@ -82,8 +82,8 @@ public class Flight implements Runnable {
 
     @Override
     public void run() {
-        setFlightPhase(FLIGHT_PHASE_TAKEOFF);
         listenForAltitude();
+        setFlightPhase(FLIGHT_PHASE_PARKED);
     }
 
     private void setFlightPhase(String flightPhase) {
@@ -99,6 +99,12 @@ public class Flight implements Runnable {
     public void initiateLanding() {
         if (flightPhase.equals(FLIGHT_PHASE_CRUISING)) {
             setFlightPhase(FLIGHT_PHASE_LANDING);
+        }
+    }
+
+    public void initiateTakeoff() {
+        if (flightPhase.equals(FLIGHT_PHASE_PARKED)) {
+            setFlightPhase(FLIGHT_PHASE_TAKEOFF);
         }
     }
 

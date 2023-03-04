@@ -14,6 +14,7 @@ import static org.flightcontrol.flight.Flight.TICK_RATE;
 import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_EXCHANGE_KEY;
 import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_EXCHANGE_NAME;
 
+
 public class CruisingState implements AltitudeState {
 
     Altitude altitude;
