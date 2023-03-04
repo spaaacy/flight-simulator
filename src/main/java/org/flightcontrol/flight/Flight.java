@@ -3,6 +3,7 @@ package org.flightcontrol.flight;
 import com.rabbitmq.client.*;
 import org.flightcontrol.ControlSystem;
 import org.flightcontrol.Observer;
+import org.flightcontrol.actuator.landinggear.LandingGear;
 import org.flightcontrol.actuator.tailflap.TailFlap;
 import org.flightcontrol.actuator.wingflap.WingFlap;
 import org.flightcontrol.sensor.altitude.Altitude;
@@ -29,7 +30,7 @@ public class Flight implements Runnable {
     public static final String FLIGHT_EXCHANGE_NAME = "FlightExchange";
     public static final String FLIGHT_EXCHANGE_KEY = "FlightKey";
     public static final String PHASE_EXCHANGE_KEY = "PhaseKey";
-    public static final Long TICK_RATE = 150L;
+    public static final Long TICK_RATE = 1000L;
 
     // RabbitMQ variables
     Connection connection;
@@ -60,6 +61,7 @@ public class Flight implements Runnable {
     // Actuators
     WingFlap wingFlap = new WingFlap();
     TailFlap tailFlap = new TailFlap();
+    LandingGear landingGear = new LandingGear();
 
 
     public Flight(ControlSystem controlSystem) {
@@ -71,6 +73,7 @@ public class Flight implements Runnable {
         wingFlap.addObserver(controlSystem);
         gps.addObserver(controlSystem);
         tailFlap.addObserver(controlSystem);
+        landingGear.addObserver(controlSystem);
 
         try {
             ConnectionFactory connectionFactory = new ConnectionFactory();

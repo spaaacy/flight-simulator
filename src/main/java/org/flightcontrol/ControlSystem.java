@@ -10,6 +10,7 @@ import java.util.LinkedList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
+import static org.flightcontrol.actuator.landinggear.LandingGear.LANDING_GEAR_ID;
 import static org.flightcontrol.actuator.tailflap.TailFlap.TAIL_FLAP_ID;
 import static org.flightcontrol.actuator.wingflap.WingFlap.WING_FLAP_ID;
 import static org.flightcontrol.flight.Flight.FLIGHT_ID;
@@ -24,6 +25,7 @@ public class ControlSystem implements Observer {
     JLabel wingFlapValue;
     JLabel gpsValue;
     JLabel tailFlapValue;
+    JLabel landingGearValue;
 
     public static void main(String[] args) {
         ControlSystem controlSystem = new ControlSystem();
@@ -44,6 +46,7 @@ public class ControlSystem implements Observer {
                 case WING_FLAP_ID -> wingFlapValue.setText(updatedValue[1]);
                 case GPS_ID -> gpsValue.setText(updatedValue[1]);
                 case TAIL_FLAP_ID -> tailFlapValue.setText(updatedValue[1]);
+                case LANDING_GEAR_ID -> landingGearValue.setText(updatedValue[1]);
             }
         }
     }
@@ -55,7 +58,7 @@ public class ControlSystem implements Observer {
 
         JFrame jFrame = new JFrame("Flight Control System");
         JPanel mainPanel = new JPanel(new BorderLayout());
-        JPanel jPanel = new JPanel(new GridLayout(5, 2));
+        JPanel jPanel = new JPanel(new GridLayout(6, 2));
         jFrame.setSize(600, 400);
 
         JLabel title = new JLabel("Boeing 777 Control System");
@@ -69,12 +72,14 @@ public class ControlSystem implements Observer {
         JLabel wingFlapLabel = new JLabel("Wing Flaps:");
         JLabel gpsLabel = new JLabel("GPS:");
         JLabel tailFlapLabel = new JLabel("Tail Flap:");
+        JLabel landingGearLabel = new JLabel("Landing Gear:");
 
         flightValue = new JLabel();
         altitudeValue = new JLabel();
         wingFlapValue = new JLabel();
         gpsValue = new JLabel();
         tailFlapValue = new JLabel();
+        landingGearValue = new JLabel();
 
         // Add all JLabels to linked list
         labels.add(flightLabel);
@@ -87,6 +92,8 @@ public class ControlSystem implements Observer {
         labels.add(gpsValue);
         labels.add(tailFlapLabel);
         labels.add(tailFlapValue);
+        labels.add(landingGearLabel);
+        labels.add(landingGearValue);
 
         // Set parameters for JLabels
         for (JLabel label: labels) {

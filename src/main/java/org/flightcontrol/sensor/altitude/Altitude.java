@@ -26,7 +26,7 @@ public class Altitude extends TimerTask {
     public static final String ALTITUDE_EXCHANGE_NAME = "AltitudeExchange";
     public static final String ALTITUDE_EXCHANGE_KEY = "AltitudeKey";
 
-    Integer currentAltitude = 0;
+    Integer currentAltitude;
     AltitudeState altitudeState;
     LinkedList<Observer> observers = new LinkedList<>();;
     Timer timer = new Timer();
@@ -55,16 +55,25 @@ public class Altitude extends TimerTask {
     @Override
     public void run() {
         altitudeState.generateAltitude();
+        System.out.println("Altitude: " + currentAltitude);
     }
 
     public void receiveFlightPhase(String flightPhase) {
         switch (flightPhase) {
+            case FLIGHT_PHASE_PARKED ->
+                setCurrentAltitude(0);
             case FLIGHT_PHASE_TAKEOFF -> {
                 altitudeState = new TakeoffState(this);
                 timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
             }
-            case FLIGHT_PHASE_LANDING -> {
+            case FLIGHT_PHASE_CRUISING ->
+                altitudeState = new CruisingState(this);
+            case FLIGHT_PHASE_LANDING ->
                 altitudeState = new LandingState(this);
+            case FLIGHT_PHASE_LANDED -> {
+                try {
+                    connection.close();
+                } catch (IOException ignored) {}
             }
         }
     }

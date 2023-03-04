@@ -48,8 +48,6 @@ public class WingFlap extends TimerTask {
         receiveFlightPhase(message);
     };
 
-        // TODO: Listen for landed
-
     public WingFlap() {
 
         // Create channels for Rabbit MQ
@@ -97,6 +95,7 @@ public class WingFlap extends TimerTask {
 
     public void receiveFlightPhase(String flightPhase) {
         switch (flightPhase) {
+            case FLIGHT_PHASE_PARKED -> setDirection(WingFlapDirection.NEUTRAL);
             case FLIGHT_PHASE_TAKEOFF -> setDirection(WingFlapDirection.DOWN);
             case FLIGHT_PHASE_CRUISING -> {
                 listenForAltitude();

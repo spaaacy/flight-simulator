@@ -48,7 +48,6 @@ public class CruisingState implements AltitudeState {
     @Override
     public void generateAltitude() {
         sendCurrentAltitude();
-        System.out.println("Altitude: " + altitude.currentAltitude);
     }
 
     private void listenForWingFlap() {

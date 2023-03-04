@@ -38,7 +38,6 @@ public class GPS extends TimerTask {
     // Callback to be used by Rabbit MQ receive
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-        System.out.println("RECEIVED");
         setCurrentBearing(Integer.valueOf(message));
     };
     DeliverCallback flightCallback = (consumerTag, delivery) -> {
@@ -67,17 +66,16 @@ public class GPS extends TimerTask {
 
     public void receiveFlightPhase(String flightPhase) {
         switch (flightPhase) {
-            case FLIGHT_PHASE_TAKEOFF -> {
+            case FLIGHT_PHASE_PARKED -> {
                 setCurrentBearing(STARTING_BEARING);
-                System.out.println("GPS: " + currentBearing + DEGREE_SYMBOL);
-                System.out.println("GPS: Destination is at a bearing of " + BEARING_DESTINATION + DEGREE_SYMBOL);
             }
             case FLIGHT_PHASE_CRUISING -> {
                 listenForTailFlap();
                 timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
             }
-            case FLIGHT_PHASE_LANDING -> {
+            case FLIGHT_PHASE_LANDING ->
                 timer.cancel();
+            case FLIGHT_PHASE_LANDED -> {
                 try {
                     connection.close();
                 } catch (IOException ignored) {

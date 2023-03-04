@@ -30,13 +30,11 @@ public class LandingState implements AltitudeState  {
                 altitude.setCurrentAltitude(0);
             }
 
-            System.out.println("Altitude: " + altitude.currentAltitude);
         } else {
+
             altitude.timer.cancel();
             altitude.sendNewState(LANDED_FLAG);
-            try {
-                altitude.connection.close();
-            } catch (IOException ignored) {}
+
         }
     }
 

@@ -68,7 +68,8 @@ public class TailFlap extends TimerTask {
 
     public void receiveFlightPhase(String flightPhase) {
         switch (flightPhase) {
-            case FLIGHT_PHASE_TAKEOFF -> setTailFlapDirection(TailFlapDirection.NEUTRAL);
+            case FLIGHT_PHASE_PARKED ->
+                    setTailFlapDirection(TailFlapDirection.NEUTRAL);
             case FLIGHT_PHASE_CRUISING -> {
                 listenForGPS();
                 tailFlapState = new TailFlapNeutralState(this);
@@ -77,6 +78,8 @@ public class TailFlap extends TimerTask {
             case FLIGHT_PHASE_LANDING -> {
                 timer.cancel();
                 setTailFlapDirection(TailFlapDirection.NEUTRAL);
+            }
+            case FLIGHT_PHASE_LANDED -> {
                 try {
                     connection.close();
                 } catch (IOException ignored) {
