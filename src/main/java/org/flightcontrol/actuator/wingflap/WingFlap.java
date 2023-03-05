@@ -32,17 +32,21 @@ public class WingFlap extends TimerTask {
     Timer timer = new Timer();
     LinkedList<Observer> observers = new LinkedList<>();
 
+    // TODO: Try using one channel
     // RabbitMQ variables
     Connection connection;
     Channel channelReceive;
     Channel channelSend;
     Channel channelFlight;
 
-    // Callback to be used by Rabbit MQ receive
+    /*
+     * Callback to be used by Rabbit MQ receive
+     */
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         currentAltitude = Integer.valueOf(message);
     };
+
     DeliverCallback flightCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         receiveFlightPhase(message);

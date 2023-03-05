@@ -16,7 +16,7 @@ import static org.flightcontrol.flight.Flight.*;
 public class GPS extends TimerTask {
 
     // Directions are in degrees (0-360)
-    static final String DEGREE_SYMBOL = "°";
+    static final String BEARING_UNIT = "°";
     public static final Integer STARTING_BEARING = 180;
     public static final Integer GPS_ACCEPTED_DIFFERENCE = 10;
     public static final int BEARING_DESTINATION = 290;
@@ -35,6 +35,8 @@ public class GPS extends TimerTask {
     Channel channelReceive;
     Channel channelFlight;
 
+    // TODO: Keep generating until landing
+
     // Callback to be used by Rabbit MQ receive
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
@@ -48,7 +50,6 @@ public class GPS extends TimerTask {
     @Override
     public void run() {
         sendCurrentDirection();
-        System.out.println("GPS: " + currentBearing + DEGREE_SYMBOL);
     }
 
     public GPS() {
@@ -73,9 +74,8 @@ public class GPS extends TimerTask {
                 listenForTailFlap();
                 timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
             }
-            case FLIGHT_PHASE_LANDING ->
-                timer.cancel();
             case FLIGHT_PHASE_LANDED -> {
+                timer.cancel();
                 try {
                     connection.close();
                 } catch (IOException ignored) {
@@ -117,8 +117,12 @@ public class GPS extends TimerTask {
 
     public void setCurrentBearing(Integer currentBearing) {
         this.currentBearing = currentBearing;
+
+        String currentBearingString = currentBearing + BEARING_UNIT;
+        System.out.println("GPS: " + currentBearingString);
+
         for (Observer observer : observers) {
-            observer.update(GPS_ID, currentBearing.toString() + DEGREE_SYMBOL);
+            observer.update(GPS_ID, currentBearingString);
         }
     }
 }

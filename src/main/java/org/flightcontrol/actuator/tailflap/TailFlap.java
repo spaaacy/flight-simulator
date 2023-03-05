@@ -31,6 +31,7 @@ public class TailFlap extends TimerTask {
     TailFlapDirection tailFlapDirection;
     TailFlapState tailFlapState;
     Boolean onCourse = false; // Used initially during cruising phase
+    Boolean isLanding = false; // Used to prevent changing direction when landing
 
     // RabbitMQ variables
     Connection connection;
@@ -76,10 +77,11 @@ public class TailFlap extends TimerTask {
                 timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
             }
             case FLIGHT_PHASE_LANDING -> {
-                timer.cancel();
-                setTailFlapDirection(TailFlapDirection.NEUTRAL);
+                isLanding = true;
+                tailFlapState = new TailFlapNeutralState(this);
             }
             case FLIGHT_PHASE_LANDED -> {
+                timer.cancel();
                 try {
                     connection.close();
                 } catch (IOException ignored) {

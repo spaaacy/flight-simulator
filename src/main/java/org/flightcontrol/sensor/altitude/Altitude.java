@@ -16,8 +16,8 @@ import static org.flightcontrol.flight.Flight.*;
 public class Altitude extends TimerTask {
 
     public static final String ALTITUDE_ID = "Altitude";
-    public static final String CRUISING_FLAG = "Cruising";
-    public static final String LANDED_FLAG = "Landed";
+    public static final String CRUISING_FLAG = "CruisingFlag";
+    public static final String LANDED_FLAG = "LandedFlag";
     static final Integer INCREMENT_TAKEOFF_LANDING = 500;
     static final Integer MAX_FLUCTUATION_TAKEOFF_LANDING = 100;
     public static final Integer ALTITUDE_ACCEPTED_DIFFERENCE = 500;
@@ -25,6 +25,7 @@ public class Altitude extends TimerTask {
 
     public static final String ALTITUDE_EXCHANGE_NAME = "AltitudeExchange";
     public static final String ALTITUDE_EXCHANGE_KEY = "AltitudeKey";
+    private static final String HEIGHT_UNIT = " m";
 
     Integer currentAltitude;
     AltitudeState altitudeState;
@@ -55,7 +56,6 @@ public class Altitude extends TimerTask {
     @Override
     public void run() {
         altitudeState.generateAltitude();
-        System.out.println("Altitude: " + currentAltitude);
     }
 
     public void receiveFlightPhase(String flightPhase) {
@@ -85,15 +85,19 @@ public class Altitude extends TimerTask {
 
     public void setCurrentAltitude(Integer currentAltitude) {
         this.currentAltitude = currentAltitude;
+
+        String currentAltitudeString = currentAltitude.toString() + HEIGHT_UNIT;
+        System.out.println("Altitude: " + currentAltitudeString);
+
         for (Observer observer : observers) {
-            observer.update(ALTITUDE_ID, currentAltitude.toString());
+            observer.update(ALTITUDE_ID, currentAltitudeString);
         }
     }
 
     protected void sendNewState(String flag) {
             try {
                 channelAltitude.exchangeDeclare(ALTITUDE_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
-                channelAltitude.basicPublish(ALTITUDE_EXCHANGE_NAME, PHASE_EXCHANGE_KEY, null, flag.getBytes());
+                channelAltitude.basicPublish(ALTITUDE_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY, null, flag.getBytes());
             } catch (IOException ignored) {
             }
     }

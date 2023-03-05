@@ -7,6 +7,7 @@ import org.flightcontrol.actuator.landinggear.LandingGear;
 import org.flightcontrol.actuator.tailflap.TailFlap;
 import org.flightcontrol.actuator.wingflap.WingFlap;
 import org.flightcontrol.sensor.altitude.Altitude;
+import org.flightcontrol.sensor.cabinpressure.CabinPressure;
 import org.flightcontrol.sensor.gps.GPS;
 
 import java.io.IOException;
@@ -16,6 +17,8 @@ import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeoutException;
 
 import static org.flightcontrol.sensor.altitude.Altitude.*;
+import static org.flightcontrol.sensor.cabinpressure.CabinPressure.CABIN_PRESSURE_EXCHANGE_KEY;
+import static org.flightcontrol.sensor.cabinpressure.CabinPressure.TOGGLE_PRESSURE_FLAG;
 
 public class Flight implements Runnable {
 
@@ -29,8 +32,7 @@ public class Flight implements Runnable {
     public static final String FLIGHT_ID = "Flight";
     public static final String FLIGHT_EXCHANGE_NAME = "FlightExchange";
     public static final String FLIGHT_EXCHANGE_KEY = "FlightKey";
-    public static final String PHASE_EXCHANGE_KEY = "PhaseKey";
-    public static final Long TICK_RATE = 1000L;
+    public static final Long TICK_RATE = 500L; // Used to control execution speed
 
     // RabbitMQ variables
     Connection connection;
@@ -50,12 +52,12 @@ public class Flight implements Runnable {
     };
 
     LinkedList<Observer> observers = new LinkedList<>();
-    ControlSystem controlSystem;
     String flightPhase = FLIGHT_PHASE_PARKED;
 
     // Sensors
     Altitude altitude = new Altitude();
     GPS gps = new GPS();
+    CabinPressure cabinPressure = new CabinPressure();
 
     // Actuators
     WingFlap wingFlap = new WingFlap();
@@ -64,15 +66,13 @@ public class Flight implements Runnable {
 
 
     public Flight(ControlSystem controlSystem) {
-        this.controlSystem = controlSystem;
-
-        // Objects observed by control system for GUI
         addObserver(controlSystem);
         altitude.addObserver(controlSystem);
         wingFlap.addObserver(controlSystem);
         gps.addObserver(controlSystem);
         tailFlap.addObserver(controlSystem);
         landingGear.addObserver(controlSystem);
+        cabinPressure.addObserver(controlSystem);
 
         try {
             ConnectionFactory connectionFactory = new ConnectionFactory();
@@ -110,6 +110,16 @@ public class Flight implements Runnable {
         }
     }
 
+    public void toggleCabinPressure() {
+        if (flightPhase.equals(FLIGHT_PHASE_CRUISING)) {
+            try {
+                channelFlight.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+                channelFlight.basicPublish(FLIGHT_EXCHANGE_NAME, CABIN_PRESSURE_EXCHANGE_KEY, null, TOGGLE_PRESSURE_FLAG.getBytes());
+            } catch (IOException ignored) {
+            }
+        }
+    }
+
     private void sendNewFlightPhase(String newPhase) {
         try {
             channelFlight.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
@@ -121,17 +131,35 @@ public class Flight implements Runnable {
         try {
             channelAltitude.exchangeDeclare(ALTITUDE_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
             String queueName = channelAltitude.queueDeclare().getQueue();
-            channelAltitude.queueBind(queueName, ALTITUDE_EXCHANGE_NAME, PHASE_EXCHANGE_KEY);
+            channelAltitude.queueBind(queueName, ALTITUDE_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY);
             channelAltitude.basicConsume(queueName, true, altitudeCallback, consumerTag -> {});
         } catch (IOException ignored) { }
     }
+    public void addObserver(Observer observer) {
+        observers.add(observer);
+    }
+
     public Altitude getAltitude() {
         return altitude;
     }
 
-    private void addObserver(Observer observer) {
-        observers.add(observer);
+    public GPS getGps() {
+        return gps;
     }
 
+    public WingFlap getWingFlap() {
+        return wingFlap;
+    }
 
+    public TailFlap getTailFlap() {
+        return tailFlap;
+    }
+
+    public LandingGear getLandingGear() {
+        return landingGear;
+    }
+
+    public CabinPressure getCabinPressure() {
+        return cabinPressure;
+    }
 }

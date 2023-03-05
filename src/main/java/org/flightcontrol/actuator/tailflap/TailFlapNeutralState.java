@@ -26,14 +26,17 @@ public class TailFlapNeutralState implements TailFlapState {
         }
         tailFlap.sendNewBearing(newBearing);
 
+        // TODO: Fix this logic
         // Plane flying too far right
-        if (newBearing - BEARING_DESTINATION > GPS_ACCEPTED_DIFFERENCE) {
-            tailFlap.tailFlapState = new TailFlapRightState(tailFlap);
-            tailFlap.onCourse = true;
-            // Plane flying too far left
-        } else if (newBearing - BEARING_DESTINATION < -GPS_ACCEPTED_DIFFERENCE) {
-            tailFlap.tailFlapState = new TailFlapLeftState(tailFlap);
-            tailFlap.onCourse = true;
+        if (!tailFlap.isLanding){
+            if (newBearing - BEARING_DESTINATION > GPS_ACCEPTED_DIFFERENCE) {
+                tailFlap.tailFlapState = new TailFlapRightState(tailFlap);
+                tailFlap.onCourse = true;
+                // Plane flying too far left
+            } else if (newBearing - BEARING_DESTINATION < -GPS_ACCEPTED_DIFFERENCE) {
+                tailFlap.tailFlapState = new TailFlapLeftState(tailFlap);
+                tailFlap.onCourse = true;
+            }
         }
     }
 }

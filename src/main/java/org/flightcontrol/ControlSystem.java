@@ -15,27 +15,31 @@ import static org.flightcontrol.actuator.tailflap.TailFlap.TAIL_FLAP_ID;
 import static org.flightcontrol.actuator.wingflap.WingFlap.WING_FLAP_ID;
 import static org.flightcontrol.flight.Flight.FLIGHT_ID;
 import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_ID;
+import static org.flightcontrol.sensor.cabinpressure.CabinPressure.*;
 import static org.flightcontrol.sensor.gps.GPS.GPS_ID;
 
-// TODO: User constructor for GUI
 public class ControlSystem implements Observer {
 
-    JLabel flightValue;
-    JLabel altitudeValue;
-    JLabel wingFlapValue;
-    JLabel gpsValue;
-    JLabel tailFlapValue;
-    JLabel landingGearValue;
+    Flight flight = new Flight(this);
+
+    JLabel flightValue = new JLabel();
+    JLabel altitudeValue = new JLabel();
+    JLabel wingFlapValue = new JLabel();
+    JLabel gpsValue = new JLabel();
+    JLabel tailFlapValue = new JLabel();
+    JLabel landingGearValue = new JLabel();
+    JLabel cabinPressureStatusValue = new JLabel();
+    JLabel cabinPressurePsiValue = new JLabel();
 
     public static void main(String[] args) {
         ControlSystem controlSystem = new ControlSystem();
-        Flight flight = new Flight(controlSystem);
 
-        controlSystem.gui(flight);
-
+        // TODO: Research pool size
         ScheduledExecutorService flightControlSystem = Executors.newScheduledThreadPool(1);
-        flightControlSystem.submit(flight);
+        flightControlSystem.submit(controlSystem.flight);
     }
+
+    // TODO: Add gps destination
 
     @Override
     public void update(String... updatedValue) {
@@ -47,19 +51,25 @@ public class ControlSystem implements Observer {
                 case GPS_ID -> gpsValue.setText(updatedValue[1]);
                 case TAIL_FLAP_ID -> tailFlapValue.setText(updatedValue[1]);
                 case LANDING_GEAR_ID -> landingGearValue.setText(updatedValue[1]);
+                case CABIN_PRESSURE_ID -> {
+                    if (updatedValue[1].equals(STATUS_ID)) {
+                        cabinPressureStatusValue.setText(updatedValue[2]);
+                    } else if (updatedValue[1].equals(PSI_ID)) {
+                        cabinPressurePsiValue.setText(updatedValue[2]);
+                    }
+                }
             }
         }
     }
 
-    private void gui(Flight flight) {
-
+    ControlSystem() {
         LinkedList<JLabel> labels = new LinkedList<>();
         LinkedList<JButton> buttons = new LinkedList<>();
 
         JFrame jFrame = new JFrame("Flight Control System");
         JPanel mainPanel = new JPanel(new BorderLayout());
-        JPanel jPanel = new JPanel(new GridLayout(6, 2));
-        jFrame.setSize(600, 400);
+        JPanel jPanel = new JPanel(new GridLayout(8, 2));
+        jFrame.setSize(500, 500);
 
         JLabel title = new JLabel("Boeing 777 Control System");
         title.setFont(new Font("Arial", Font.BOLD, 30));
@@ -73,13 +83,8 @@ public class ControlSystem implements Observer {
         JLabel gpsLabel = new JLabel("GPS:");
         JLabel tailFlapLabel = new JLabel("Tail Flap:");
         JLabel landingGearLabel = new JLabel("Landing Gear:");
-
-        flightValue = new JLabel();
-        altitudeValue = new JLabel();
-        wingFlapValue = new JLabel();
-        gpsValue = new JLabel();
-        tailFlapValue = new JLabel();
-        landingGearValue = new JLabel();
+        JLabel cabinPressureStatusLabel = new JLabel("Cabin Pressure Status:");
+        JLabel cabinPressurePsiLabel = new JLabel("Cabin Pressure:");
 
         // Add all JLabels to linked list
         labels.add(flightLabel);
@@ -94,6 +99,10 @@ public class ControlSystem implements Observer {
         labels.add(tailFlapValue);
         labels.add(landingGearLabel);
         labels.add(landingGearValue);
+        labels.add(cabinPressureStatusLabel);
+        labels.add(cabinPressureStatusValue);
+        labels.add(cabinPressurePsiLabel);
+        labels.add(cabinPressurePsiValue);
 
         // Set parameters for JLabels
         for (JLabel label: labels) {
@@ -103,7 +112,7 @@ public class ControlSystem implements Observer {
         }
 
         /*
-         Buttons
+         * Buttons
          */
         JButton takeoffButton = new JButton("Initiate Takeoff");
         takeoffButton.addActionListener(new ActionListener() {
@@ -123,10 +132,18 @@ public class ControlSystem implements Observer {
         });
         buttons.add(landingButton);
 
+        JButton pressureButton = new JButton("Toggle Cabin Pressure");
+        pressureButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                flight.toggleCabinPressure();
+            }
+        });
+        buttons.add(pressureButton);
+
         for (JButton button : buttons){
             buttonPanel.add(button);
         }
-
 
         mainPanel.add(title, BorderLayout.PAGE_START);
         mainPanel.add(jPanel, BorderLayout.CENTER);
