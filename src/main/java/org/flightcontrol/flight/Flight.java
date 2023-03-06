@@ -8,12 +8,11 @@ import org.flightcontrol.actuator.tailflap.TailFlap;
 import org.flightcontrol.actuator.wingflap.WingFlap;
 import org.flightcontrol.sensor.altitude.Altitude;
 import org.flightcontrol.sensor.cabinpressure.CabinPressure;
-import org.flightcontrol.sensor.gps.GPS;
+import org.flightcontrol.actuator.wingflap.gps.GPS;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
-import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeoutException;
 
 import static org.flightcontrol.sensor.altitude.Altitude.*;
@@ -36,8 +35,7 @@ public class Flight implements Runnable {
 
     // RabbitMQ variables
     Connection connection;
-    Channel channelFlight;
-    Channel channelAltitude;
+    Channel channel;
 
     // Callback to be used by Rabbit MQ receive
     DeliverCallback altitudeCallback = (consumerTag, delivery) -> {
@@ -77,8 +75,7 @@ public class Flight implements Runnable {
         try {
             ConnectionFactory connectionFactory = new ConnectionFactory();
             connection = connectionFactory.newConnection();
-            channelFlight = connection.createChannel();
-            channelAltitude = connection.createChannel();
+            channel = connection.createChannel();
         } catch (IOException | TimeoutException ignored) {}
     }
 
@@ -113,8 +110,8 @@ public class Flight implements Runnable {
     public void toggleCabinPressure() {
         if (flightPhase.equals(FLIGHT_PHASE_CRUISING)) {
             try {
-                channelFlight.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
-                channelFlight.basicPublish(FLIGHT_EXCHANGE_NAME, CABIN_PRESSURE_EXCHANGE_KEY, null, TOGGLE_PRESSURE_FLAG.getBytes());
+                channel.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+                channel.basicPublish(FLIGHT_EXCHANGE_NAME, CABIN_PRESSURE_EXCHANGE_KEY, null, TOGGLE_PRESSURE_FLAG.getBytes());
             } catch (IOException ignored) {
             }
         }
@@ -122,17 +119,17 @@ public class Flight implements Runnable {
 
     private void sendNewFlightPhase(String newPhase) {
         try {
-            channelFlight.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
-            channelFlight.basicPublish(FLIGHT_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY, null, newPhase.getBytes());
+            channel.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            channel.basicPublish(FLIGHT_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY, null, newPhase.getBytes());
         } catch(IOException ignored) {}
     }
 
     private void listenForAltitude() {
         try {
-            channelAltitude.exchangeDeclare(ALTITUDE_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
-            String queueName = channelAltitude.queueDeclare().getQueue();
-            channelAltitude.queueBind(queueName, ALTITUDE_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY);
-            channelAltitude.basicConsume(queueName, true, altitudeCallback, consumerTag -> {});
+            channel.exchangeDeclare(ALTITUDE_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            String queueName = channel.queueDeclare().getQueue();
+            channel.queueBind(queueName, ALTITUDE_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY);
+            channel.basicConsume(queueName, true, altitudeCallback, consumerTag -> {});
         } catch (IOException ignored) { }
     }
     public void addObserver(Observer observer) {

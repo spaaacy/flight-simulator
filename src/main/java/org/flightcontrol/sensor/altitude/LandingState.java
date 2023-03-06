@@ -1,10 +1,5 @@
 package org.flightcontrol.sensor.altitude;
 
-import java.io.IOException;
-import java.util.Timer;
-import java.util.TimerTask;
-
-import static org.flightcontrol.flight.Flight.TICK_RATE;
 import static org.flightcontrol.sensor.altitude.Altitude.*;
 
 public class LandingState implements AltitudeState  {
@@ -33,7 +28,7 @@ public class LandingState implements AltitudeState  {
         } else {
 
             altitude.timer.cancel();
-            altitude.sendNewState(LANDED_FLAG);
+            altitude.sendNewFlightPhase(LANDED_FLAG);
 
         }
     }

@@ -35,9 +35,7 @@ public class WingFlap extends TimerTask {
     // TODO: Try using one channel
     // RabbitMQ variables
     Connection connection;
-    Channel channelReceive;
-    Channel channelSend;
-    Channel channelFlight;
+    Channel channel;
 
     /*
      * Callback to be used by Rabbit MQ receive
@@ -58,9 +56,7 @@ public class WingFlap extends TimerTask {
         try {
             ConnectionFactory connectionFactory = new ConnectionFactory();
             connection = connectionFactory.newConnection();
-            channelReceive = connection.createChannel();
-            channelSend = connection.createChannel();
-            channelFlight = connection.createChannel();
+            channel = connection.createChannel();
         } catch (IOException | TimeoutException ignored) { }
 
         listenForFlight();
@@ -73,27 +69,27 @@ public class WingFlap extends TimerTask {
 
     private void listenForAltitude() {
         try {
-            channelReceive.exchangeDeclare(ALTITUDE_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
-            String queueName = channelReceive.queueDeclare().getQueue();
-            channelReceive.queueBind(queueName, ALTITUDE_EXCHANGE_NAME, ALTITUDE_EXCHANGE_KEY);
-            channelReceive.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
+            channel.exchangeDeclare(ALTITUDE_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            String queueName = channel.queueDeclare().getQueue();
+            channel.queueBind(queueName, ALTITUDE_EXCHANGE_NAME, ALTITUDE_EXCHANGE_KEY);
+            channel.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
         } catch (IOException ignored) { }
     }
 
     private void listenForFlight() {
         try {
-            channelReceive.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
-            String queueName = channelReceive.queueDeclare().getQueue();
-            channelReceive.queueBind(queueName, FLIGHT_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY);
-            channelReceive.basicConsume(queueName, true, flightCallback, consumerTag -> {
+            channel.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            String queueName = channel.queueDeclare().getQueue();
+            channel.queueBind(queueName, FLIGHT_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY);
+            channel.basicConsume(queueName, true, flightCallback, consumerTag -> {
             });
         } catch (IOException ignored) {}
     }
     protected void sendNewAltitude(Integer newAltitude) {
         try {
-            channelSend.exchangeDeclare(WING_FLAP_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            channel.exchangeDeclare(WING_FLAP_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
             String message = newAltitude.toString();
-            channelSend.basicPublish(WING_FLAP_EXCHANGE_NAME, WING_FLAP_EXCHANGE_KEY, null, message.getBytes());
+            channel.basicPublish(WING_FLAP_EXCHANGE_NAME, WING_FLAP_EXCHANGE_KEY, null, message.getBytes());
         } catch (IOException ignored) {}
     }
 

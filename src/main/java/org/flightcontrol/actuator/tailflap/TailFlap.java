@@ -11,7 +11,7 @@ import java.util.TimerTask;
 import java.util.concurrent.TimeoutException;
 
 import static org.flightcontrol.flight.Flight.*;
-import static org.flightcontrol.sensor.gps.GPS.*;
+import static org.flightcontrol.actuator.wingflap.gps.GPS.*;
 
 enum TailFlapDirection {LEFT, RIGHT, NEUTRAL};
 
@@ -31,13 +31,11 @@ public class TailFlap extends TimerTask {
     TailFlapDirection tailFlapDirection;
     TailFlapState tailFlapState;
     Boolean onCourse = false; // Used initially during cruising phase
-    Boolean isLanding = false; // Used to prevent changing direction when landing
+    Boolean isTakingOffOrLanding = false; // Used to prevent changing direction when taking off or landing
 
     // RabbitMQ variables
     Connection connection;
-    Channel channelSend;
-    Channel channelReceive;
-    Channel channelFlight;
+    Channel channel;
 
     // Callback to be used by Rabbit MQ receive
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
@@ -53,13 +51,10 @@ public class TailFlap extends TimerTask {
         try {
             ConnectionFactory connectionFactory = new ConnectionFactory();
             connection = connectionFactory.newConnection();
-            channelSend = connection.createChannel();
-            channelReceive = connection.createChannel();
-            channelFlight = connection.createChannel();
+            channel = connection.createChannel();
         } catch (IOException | TimeoutException ignored) {}
 
         listenForFlight();
-
     }
 
     @Override
@@ -70,14 +65,16 @@ public class TailFlap extends TimerTask {
     public void receiveFlightPhase(String flightPhase) {
         switch (flightPhase) {
             case FLIGHT_PHASE_PARKED ->
-                    setTailFlapDirection(TailFlapDirection.NEUTRAL);
-            case FLIGHT_PHASE_CRUISING -> {
+                setTailFlapDirection(TailFlapDirection.NEUTRAL);
+            case FLIGHT_PHASE_TAKEOFF -> {
+                isTakingOffOrLanding = true;
                 listenForGPS();
                 tailFlapState = new TailFlapNeutralState(this);
                 timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
             }
+            case FLIGHT_PHASE_CRUISING -> isTakingOffOrLanding = false;
             case FLIGHT_PHASE_LANDING -> {
-                isLanding = true;
+                isTakingOffOrLanding = true;
                 tailFlapState = new TailFlapNeutralState(this);
             }
             case FLIGHT_PHASE_LANDED -> {
@@ -100,28 +97,28 @@ public class TailFlap extends TimerTask {
 
     private void listenForGPS() {
         try {
-            channelReceive.exchangeDeclare(GPS_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
-            String queueName = channelReceive.queueDeclare().getQueue();
-            channelReceive.queueBind(queueName, GPS_EXCHANGE_NAME, GPS_EXCHANGE_KEY);
-            channelReceive.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
+            channel.exchangeDeclare(GPS_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            String queueName = channel.queueDeclare().getQueue();
+            channel.queueBind(queueName, GPS_EXCHANGE_NAME, GPS_EXCHANGE_KEY);
+            channel.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
         } catch (IOException ignored) {}
     }
 
     private void listenForFlight() {
         try {
-            channelReceive.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
-            String queueName = channelReceive.queueDeclare().getQueue();
-            channelReceive.queueBind(queueName, FLIGHT_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY);
-            channelReceive.basicConsume(queueName, true, flightCallback, consumerTag -> {
+            channel.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            String queueName = channel.queueDeclare().getQueue();
+            channel.queueBind(queueName, FLIGHT_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY);
+            channel.basicConsume(queueName, true, flightCallback, consumerTag -> {
             });
         } catch (IOException ignored) {}
     }
 
     protected void sendNewBearing(Integer newDirection) {
         try {
-            channelSend.exchangeDeclare(TAIL_FLAP_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            channel.exchangeDeclare(TAIL_FLAP_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
             String message = newDirection.toString();
-            channelSend.basicPublish(TAIL_FLAP_EXCHANGE_NAME, TAIL_FLAP_EXCHANGE_KEY, null, message.getBytes());
+            channel.basicPublish(TAIL_FLAP_EXCHANGE_NAME, TAIL_FLAP_EXCHANGE_KEY, null, message.getBytes());
         } catch (IOException ignored) {}
     }
 

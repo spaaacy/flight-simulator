@@ -1,9 +1,5 @@
 package org.flightcontrol.sensor.altitude;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
-import static org.flightcontrol.flight.Flight.TICK_RATE;
 import static org.flightcontrol.sensor.altitude.Altitude.*;
 
 public class TakeoffState implements AltitudeState {
@@ -27,7 +23,7 @@ public class TakeoffState implements AltitudeState {
 
         } else {
 
-            altitude.sendNewState(CRUISING_FLAG);
+            altitude.sendNewFlightPhase(CRUISING_FLAG);
 
         }
     }

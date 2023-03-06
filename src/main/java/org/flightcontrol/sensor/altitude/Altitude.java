@@ -8,9 +8,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeoutException;
 
+import static org.flightcontrol.actuator.wingflap.WingFlap.WING_FLAP_EXCHANGE_KEY;
+import static org.flightcontrol.actuator.wingflap.WingFlap.WING_FLAP_EXCHANGE_NAME;
 import static org.flightcontrol.flight.Flight.*;
 
 public class Altitude extends TimerTask {
@@ -34,11 +35,16 @@ public class Altitude extends TimerTask {
 
     // RabbitMQ variables
     Connection connection;
-    Channel channelFlight;
-    Channel channelAltitude;
+    Channel channel;
+
     DeliverCallback flightCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         receiveFlightPhase(message);
+    };
+
+    DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+        String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+        setCurrentAltitude(Integer.valueOf(message));
     };
 
     public Altitude() {
@@ -46,8 +52,7 @@ public class Altitude extends TimerTask {
         try {
             ConnectionFactory connectionFactory = new ConnectionFactory();
             connection = connectionFactory.newConnection();
-            channelFlight = connection.createChannel();
-            channelAltitude = connection.createChannel();
+            channel = connection.createChannel();
         } catch (IOException | TimeoutException ignored) {}
 
         listenForFlight();
@@ -56,6 +61,14 @@ public class Altitude extends TimerTask {
     @Override
     public void run() {
         altitudeState.generateAltitude();
+    }
+
+    private void sendCurrentAltitude() {
+        try {
+            channel.exchangeDeclare(ALTITUDE_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            String message = currentAltitude.toString();
+            channel.basicPublish(ALTITUDE_EXCHANGE_NAME, ALTITUDE_EXCHANGE_KEY, null, message.getBytes());
+        } catch (IOException ignored) { }
     }
 
     public void receiveFlightPhase(String flightPhase) {
@@ -67,7 +80,7 @@ public class Altitude extends TimerTask {
                 timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
             }
             case FLIGHT_PHASE_CRUISING ->
-                altitudeState = new CruisingState(this);
+                listenForWingFlap();
             case FLIGHT_PHASE_LANDING ->
                 altitudeState = new LandingState(this);
             case FLIGHT_PHASE_LANDED -> {
@@ -78,6 +91,14 @@ public class Altitude extends TimerTask {
         }
     }
 
+    private void listenForWingFlap() {
+        try {
+            channel.exchangeDeclare(WING_FLAP_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            String queueName = channel.queueDeclare().getQueue();
+            channel.queueBind(queueName, WING_FLAP_EXCHANGE_NAME, WING_FLAP_EXCHANGE_KEY);
+            channel.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
+        } catch (IOException ignored) { }
+    }
 
     public void addObserver(Observer observer) {
         observers.add(observer);
@@ -85,6 +106,7 @@ public class Altitude extends TimerTask {
 
     public void setCurrentAltitude(Integer currentAltitude) {
         this.currentAltitude = currentAltitude;
+        sendCurrentAltitude();
 
         String currentAltitudeString = currentAltitude.toString() + HEIGHT_UNIT;
         System.out.println("Altitude: " + currentAltitudeString);
@@ -94,20 +116,22 @@ public class Altitude extends TimerTask {
         }
     }
 
-    protected void sendNewState(String flag) {
+
+
+    protected void sendNewFlightPhase(String flag) {
             try {
-                channelAltitude.exchangeDeclare(ALTITUDE_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
-                channelAltitude.basicPublish(ALTITUDE_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY, null, flag.getBytes());
+                channel.exchangeDeclare(ALTITUDE_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+                channel.basicPublish(ALTITUDE_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY, null, flag.getBytes());
             } catch (IOException ignored) {
             }
     }
 
     private void listenForFlight() {
         try {
-            channelFlight.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
-            String queueName = channelFlight.queueDeclare().getQueue();
-            channelFlight.queueBind(queueName, FLIGHT_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY);
-            channelFlight.basicConsume(queueName, true, flightCallback, consumerTag -> {
+            channel.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            String queueName = channel.queueDeclare().getQueue();
+            channel.queueBind(queueName, FLIGHT_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY);
+            channel.basicConsume(queueName, true, flightCallback, consumerTag -> {
             });
         } catch (IOException ignored) {}
     }

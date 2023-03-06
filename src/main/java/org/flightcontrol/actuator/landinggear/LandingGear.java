@@ -8,43 +8,63 @@ import java.util.LinkedList;
 import java.util.concurrent.TimeoutException;
 
 import static org.flightcontrol.flight.Flight.*;
+import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_EXCHANGE_KEY;
+import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_EXCHANGE_NAME;
 
 enum LandingGearStatus {DEPLOYED, STOWED}
 
 public class LandingGear {
 
     public static final String LANDING_GEAR_ID = "LandingGear";
+    private static final Integer LANDING_GEAR_ALTITUDE = 5000;
 
     LandingGearStatus landingGearStatus;
     LinkedList<Observer> observers = new LinkedList<>();
 
     // RabbitMQ variables
     Connection connection;
-    Channel channelReceive;
+    Channel channel;
+
+    /*
+     * Callback to be used by Rabbit MQ receive
+     */
     DeliverCallback flightCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         receiveFlightPhase(message);
     };
+
+    DeliverCallback altitudeCallback = (consumerTag, delivery) -> {
+        String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+        receiveAltitude(Integer.valueOf(message));
+    };
+
+    private void receiveAltitude(Integer newAltitude) {
+        if (newAltitude < LANDING_GEAR_ALTITUDE) {
+            setLandingGearStatus(LandingGearStatus.DEPLOYED);
+        } else {
+            setLandingGearStatus(LandingGearStatus.STOWED);
+        }
+    }
 
 
     public LandingGear() {
         try {
             ConnectionFactory connectionFactory = new ConnectionFactory();
             connection = connectionFactory.newConnection();
-            channelReceive = connection.createChannel();
+            channel = connection.createChannel();
         } catch (IOException | TimeoutException ignored) {}
 
         listenForFlight();
+        listenForAltitude();
     }
+
+
 
     public void receiveFlightPhase(String flightPhase) {
         switch (flightPhase) {
-            case FLIGHT_PHASE_PARKED, FLIGHT_PHASE_CRUISING ->
-                setLandingGearStatus(LandingGearStatus.STOWED);
-            case FLIGHT_PHASE_TAKEOFF, FLIGHT_PHASE_LANDING ->
+            case FLIGHT_PHASE_PARKED ->
                 setLandingGearStatus(LandingGearStatus.DEPLOYED);
             case FLIGHT_PHASE_LANDED -> {
-                setLandingGearStatus(LandingGearStatus.DEPLOYED);
                 try {
                     connection.close();
                 } catch (IOException ignored) {}
@@ -54,10 +74,10 @@ public class LandingGear {
 
     private void listenForFlight() {
         try {
-            channelReceive.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
-            String queueName = channelReceive.queueDeclare().getQueue();
-            channelReceive.queueBind(queueName, FLIGHT_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY);
-            channelReceive.basicConsume(queueName, true, flightCallback, consumerTag -> {
+            channel.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            String queueName = channel.queueDeclare().getQueue();
+            channel.queueBind(queueName, FLIGHT_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY);
+            channel.basicConsume(queueName, true, flightCallback, consumerTag -> {
             });
         } catch (IOException ignored) {}
     }
@@ -69,6 +89,15 @@ public class LandingGear {
         for (Observer observer : observers) {
             observer.update(LANDING_GEAR_ID, landingGearStatus.toString());
         }
+    }
+
+    private void listenForAltitude() {
+        try {
+            channel.exchangeDeclare(ALTITUDE_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            String queueName = channel.queueDeclare().getQueue();
+            channel.queueBind(queueName, ALTITUDE_EXCHANGE_NAME, ALTITUDE_EXCHANGE_KEY);
+            channel.basicConsume(queueName, true, altitudeCallback, consumerTag -> {});
+        } catch (IOException ignored) { }
     }
 
     public void addObserver(Observer observer) {

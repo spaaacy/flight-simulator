@@ -1,4 +1,4 @@
-package org.flightcontrol.sensor.gps;
+package org.flightcontrol.actuator.wingflap.gps;
 
 import com.rabbitmq.client.*;
 import org.flightcontrol.Observer;
@@ -31,11 +31,7 @@ public class GPS extends TimerTask {
 
     // RabbitMQ variables
     Connection connection;
-    Channel channelSend;
-    Channel channelReceive;
-    Channel channelFlight;
-
-    // TODO: Keep generating until landing
+    Channel channel;
 
     // Callback to be used by Rabbit MQ receive
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
@@ -57,9 +53,7 @@ public class GPS extends TimerTask {
         try {
             ConnectionFactory connectionFactory = new ConnectionFactory();
             connection = connectionFactory.newConnection();
-            channelSend = connection.createChannel();
-            channelReceive = connection.createChannel();
-            channelFlight = connection.createChannel();
+            channel = connection.createChannel();
         } catch (IOException | TimeoutException ignored) { }
 
         listenForFlight();
@@ -70,7 +64,7 @@ public class GPS extends TimerTask {
             case FLIGHT_PHASE_PARKED -> {
                 setCurrentBearing(STARTING_BEARING);
             }
-            case FLIGHT_PHASE_CRUISING -> {
+            case FLIGHT_PHASE_TAKEOFF -> {
                 listenForTailFlap();
                 timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
             }
@@ -86,28 +80,28 @@ public class GPS extends TimerTask {
 
     private void listenForTailFlap() {
         try {
-            channelReceive.exchangeDeclare(TAIL_FLAP_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
-            String queueName = channelReceive.queueDeclare().getQueue();
-            channelReceive.queueBind(queueName, TAIL_FLAP_EXCHANGE_NAME, TAIL_FLAP_EXCHANGE_KEY);
-            channelReceive.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
+            channel.exchangeDeclare(TAIL_FLAP_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            String queueName = channel.queueDeclare().getQueue();
+            channel.queueBind(queueName, TAIL_FLAP_EXCHANGE_NAME, TAIL_FLAP_EXCHANGE_KEY);
+            channel.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
         } catch (IOException ignored) {}
     }
 
     private void listenForFlight() {
         try {
-            channelReceive.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
-            String queueName = channelReceive.queueDeclare().getQueue();
-            channelReceive.queueBind(queueName, FLIGHT_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY);
-            channelReceive.basicConsume(queueName, true, flightCallback, consumerTag -> {
+            channel.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            String queueName = channel.queueDeclare().getQueue();
+            channel.queueBind(queueName, FLIGHT_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY);
+            channel.basicConsume(queueName, true, flightCallback, consumerTag -> {
             });
         } catch (IOException ignored) {}
     }
 
     private void sendCurrentDirection() {
         try {
-            channelSend.exchangeDeclare(GPS_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            channel.exchangeDeclare(GPS_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
             String message = currentBearing.toString();
-            channelSend.basicPublish(GPS_EXCHANGE_NAME, GPS_EXCHANGE_KEY, null, message.getBytes());
+            channel.basicPublish(GPS_EXCHANGE_NAME, GPS_EXCHANGE_KEY, null, message.getBytes());
         } catch (IOException ignored) {}
     }
 

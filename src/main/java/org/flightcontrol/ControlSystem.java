@@ -16,7 +16,7 @@ import static org.flightcontrol.actuator.wingflap.WingFlap.WING_FLAP_ID;
 import static org.flightcontrol.flight.Flight.FLIGHT_ID;
 import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_ID;
 import static org.flightcontrol.sensor.cabinpressure.CabinPressure.*;
-import static org.flightcontrol.sensor.gps.GPS.GPS_ID;
+import static org.flightcontrol.actuator.wingflap.gps.GPS.GPS_ID;
 
 public class ControlSystem implements Observer {
 
