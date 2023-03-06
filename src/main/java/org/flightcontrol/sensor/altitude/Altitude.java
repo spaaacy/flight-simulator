@@ -29,11 +29,11 @@ public class Altitude extends TimerTask {
     public static final String ALTITUDE_EXCHANGE_KEY = "AltitudeKey";
     private static final String HEIGHT_UNIT = " m";
 
+    Boolean isCruising = false;
     Integer currentAltitude;
     AltitudeState altitudeState;
     LinkedList<Observer> observers = new LinkedList<>();;
-    Timer timerCruising = new Timer();
-    Timer timerLanding = new Timer();
+    Timer timer = new Timer();
 
     // RabbitMQ variables
     Connection connection;
@@ -62,7 +62,9 @@ public class Altitude extends TimerTask {
 
     @Override
     public void run() {
-        altitudeState.generateAltitude();
+        if (!isCruising){
+            altitudeState.generateAltitude();
+        }
     }
 
     private void sendCurrentAltitude() {
@@ -79,18 +81,18 @@ public class Altitude extends TimerTask {
                 setCurrentAltitude(0);
             case FLIGHT_PHASE_TAKEOFF -> {
                 altitudeState = new TakeoffState(this);
-                timerCruising.scheduleAtFixedRate(this, 0L, TICK_RATE);
+                timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
             }
             case FLIGHT_PHASE_CRUISING -> {
-                timerCruising.cancel();
+                isCruising = true;
                 listenForWingFlap();
             }
             case FLIGHT_PHASE_LANDING -> {
+                isCruising = false;
                 altitudeState = new LandingState(this);
-                timerLanding.scheduleAtFixedRate(this, 0L, TICK_RATE);
             }
             case FLIGHT_PHASE_LANDED -> {
-                timerLanding.cancel();
+                timer.cancel();
 
                 try {
                     connection.close();

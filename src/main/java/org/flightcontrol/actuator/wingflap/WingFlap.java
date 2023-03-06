@@ -56,11 +56,10 @@ public class WingFlap extends TimerTask {
         if (message.equals(TOGGLE_PRESSURE_FLAG)) {
             if (targetAltitude.equals(CRUISING_ALTITUDE)) {
                 targetAltitude = BREACHED_PRESSURE_ALTITUDE;
-                System.out.println(targetAltitude);
-            } else if (targetAltitude.equals(BREACHED_PRESSURE_ALTITUDE)) {
+            } else {
                 targetAltitude = CRUISING_ALTITUDE;
-                System.out.println(targetAltitude);
             }
+            wingFlapState = new WingFlapNeutralState(this);
         }
     };
 
