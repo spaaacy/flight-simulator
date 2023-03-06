@@ -63,10 +63,10 @@ public class GPS extends TimerTask {
         switch (flightPhase) {
             case FLIGHT_PHASE_PARKED -> {
                 setCurrentBearing(STARTING_BEARING);
+                timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
             }
             case FLIGHT_PHASE_TAKEOFF -> {
                 listenForTailFlap();
-                timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
             }
             case FLIGHT_PHASE_LANDED -> {
                 timer.cancel();

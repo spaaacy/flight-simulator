@@ -27,7 +27,6 @@ public class LandingState implements AltitudeState  {
 
         } else {
 
-            altitude.timer.cancel();
             altitude.sendNewFlightPhase(LANDED_FLAG);
 
         }

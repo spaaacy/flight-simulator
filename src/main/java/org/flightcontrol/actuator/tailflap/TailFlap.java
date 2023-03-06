@@ -23,11 +23,12 @@ public class TailFlap extends TimerTask {
 
     static final Integer MAX_FLUCTUATION_LEFT_RIGHT = 2;
     static final Integer MAX_FLUCTUATION_NEUTRAL = 20;
-    static final Integer INCREMENT_VALUE_LEFT_RIGHT = 4;
+    static final Integer FLUCTUATION_OFF_COURSE = 5;
+    static final Integer INCREMENT_VALUE_LEFT_RIGHT = 5;
 
     Timer timer = new Timer();
     LinkedList<Observer> observers = new LinkedList<>();
-    Integer currentBearing = STARTING_BEARING;
+    Integer currentBearing;
     TailFlapDirection tailFlapDirection;
     TailFlapState tailFlapState;
     Boolean onCourse = false; // Used initially during cruising phase
@@ -64,11 +65,12 @@ public class TailFlap extends TimerTask {
 
     public void receiveFlightPhase(String flightPhase) {
         switch (flightPhase) {
-            case FLIGHT_PHASE_PARKED ->
+            case FLIGHT_PHASE_PARKED -> {
                 setTailFlapDirection(TailFlapDirection.NEUTRAL);
+                listenForGPS();
+            }
             case FLIGHT_PHASE_TAKEOFF -> {
                 isTakingOffOrLanding = true;
-                listenForGPS();
                 tailFlapState = new TailFlapNeutralState(this);
                 timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
             }

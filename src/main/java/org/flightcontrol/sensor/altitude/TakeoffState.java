@@ -22,9 +22,7 @@ public class TakeoffState implements AltitudeState {
             altitude.setCurrentAltitude(newAltitude);
 
         } else {
-
             altitude.sendNewFlightPhase(CRUISING_FLAG);
-
         }
     }
 }

@@ -21,7 +21,7 @@ public class WingFlapDownState implements WingFlapState {
         wingFlap.sendNewAltitude(newAltitude);
 
         // Checks to see if plane is now within acceptable range
-        if (newAltitude - CRUISING_ALTITUDE > -ALTITUDE_ACCEPTED_DIFFERENCE) {
+        if (newAltitude - wingFlap.targetAltitude > -ALTITUDE_ACCEPTED_DIFFERENCE) {
             wingFlap.wingFlapState = new WingFlapNeutralState(wingFlap);
         }
 

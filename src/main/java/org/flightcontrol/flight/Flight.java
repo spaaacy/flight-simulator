@@ -31,7 +31,7 @@ public class Flight implements Runnable {
     public static final String FLIGHT_ID = "Flight";
     public static final String FLIGHT_EXCHANGE_NAME = "FlightExchange";
     public static final String FLIGHT_EXCHANGE_KEY = "FlightKey";
-    public static final Long TICK_RATE = 500L; // Used to control execution speed
+    public static final Long TICK_RATE = 600L; // Used to control execution speed
 
     // RabbitMQ variables
     Connection connection;
@@ -77,6 +77,7 @@ public class Flight implements Runnable {
             connection = connectionFactory.newConnection();
             channel = connection.createChannel();
         } catch (IOException | TimeoutException ignored) {}
+
     }
 
     @Override

@@ -40,9 +40,13 @@ public class LandingGear {
 
     private void receiveAltitude(Integer newAltitude) {
         if (newAltitude < LANDING_GEAR_ALTITUDE) {
-            setLandingGearStatus(LandingGearStatus.DEPLOYED);
+            if (!landingGearStatus.equals(LandingGearStatus.DEPLOYED)){
+                setLandingGearStatus(LandingGearStatus.DEPLOYED);
+            }
         } else {
-            setLandingGearStatus(LandingGearStatus.STOWED);
+            if (!landingGearStatus.equals(LandingGearStatus.STOWED)) {
+                setLandingGearStatus(LandingGearStatus.STOWED);
+            }
         }
     }
 

@@ -2,7 +2,6 @@ package org.flightcontrol.actuator.wingflap;
 
 import static org.flightcontrol.actuator.wingflap.WingFlap.*;
 import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_ACCEPTED_DIFFERENCE;
-import static org.flightcontrol.sensor.altitude.Altitude.CRUISING_ALTITUDE;
 
 public class WingFlapNeutralState implements WingFlapState {
 
@@ -17,14 +16,14 @@ public class WingFlapNeutralState implements WingFlapState {
         wingFlap.setDirection(WingFlapDirection.NEUTRAL);
 
         Integer fluctuation = (int) (Math.random() * MAX_FLUCTUATION_NEUTRAL * 2) - MAX_FLUCTUATION_NEUTRAL;
-        Integer newAltitude = CRUISING_ALTITUDE + fluctuation;
+        Integer newAltitude = wingFlap.targetAltitude + fluctuation;
         wingFlap.sendNewAltitude(newAltitude);
 
         // Plane flying too high
-        if (newAltitude - CRUISING_ALTITUDE > ALTITUDE_ACCEPTED_DIFFERENCE) {
+        if (newAltitude - wingFlap.targetAltitude > ALTITUDE_ACCEPTED_DIFFERENCE) {
             wingFlap.wingFlapState = new WingFlapUpState(wingFlap);
         // Plane flying too low
-        } else if (newAltitude - CRUISING_ALTITUDE < -ALTITUDE_ACCEPTED_DIFFERENCE) {
+        } else if (newAltitude - wingFlap.targetAltitude < -ALTITUDE_ACCEPTED_DIFFERENCE) {
             wingFlap.wingFlapState = new WingFlapDownState(wingFlap);
         }
     }

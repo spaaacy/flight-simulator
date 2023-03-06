@@ -12,6 +12,7 @@ import java.util.concurrent.TimeoutException;
 
 import static org.flightcontrol.flight.Flight.*;
 import static org.flightcontrol.sensor.altitude.Altitude.*;
+import static org.flightcontrol.sensor.cabinpressure.CabinPressure.*;
 
 enum WingFlapDirection {UP, DOWN, NEUTRAL}
 
@@ -26,13 +27,13 @@ public class WingFlap extends TimerTask {
     static final Integer MAX_FLUCTUATION_NEUTRAL = 750;
     static final Integer INCREMENT_VALUE_UP_DOWN = 30;
 
-    Integer currentAltitude = CRUISING_ALTITUDE;
+    Integer currentAltitude;
     WingFlapState wingFlapState;
     WingFlapDirection wingFlapDirection;
     Timer timer = new Timer();
     LinkedList<Observer> observers = new LinkedList<>();
+    Integer targetAltitude = CRUISING_ALTITUDE;
 
-    // TODO: Try using one channel
     // RabbitMQ variables
     Connection connection;
     Channel channel;
@@ -48,6 +49,19 @@ public class WingFlap extends TimerTask {
     DeliverCallback flightCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         receiveFlightPhase(message);
+    };
+
+    DeliverCallback cabinPressureCallback = (consumerTag, delivery) -> {
+        String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+        if (message.equals(TOGGLE_PRESSURE_FLAG)) {
+            if (targetAltitude.equals(CRUISING_ALTITUDE)) {
+                targetAltitude = BREACHED_PRESSURE_ALTITUDE;
+                System.out.println(targetAltitude);
+            } else if (targetAltitude.equals(BREACHED_PRESSURE_ALTITUDE)) {
+                targetAltitude = CRUISING_ALTITUDE;
+                System.out.println(targetAltitude);
+            }
+        }
     };
 
     public WingFlap() {
@@ -76,6 +90,17 @@ public class WingFlap extends TimerTask {
         } catch (IOException ignored) { }
     }
 
+    private void listenForCabinPressure() {
+        try {
+            channel.exchangeDeclare(CABIN_PRESSURE_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            String queueName = channel.queueDeclare().getQueue();
+            channel.queueBind(queueName, CABIN_PRESSURE_EXCHANGE_NAME, CABIN_PRESSURE_EXCHANGE_KEY);
+            channel.basicConsume(queueName, true, cabinPressureCallback, consumerTag -> {
+            });
+        } catch (IOException ignored) {}
+
+    }
+
     private void listenForFlight() {
         try {
             channel.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
@@ -85,6 +110,11 @@ public class WingFlap extends TimerTask {
             });
         } catch (IOException ignored) {}
     }
+
+    public void setCurrentAltitude(Integer currentAltitude) {
+        this.currentAltitude = currentAltitude;
+    }
+
     protected void sendNewAltitude(Integer newAltitude) {
         try {
             channel.exchangeDeclare(WING_FLAP_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
@@ -98,6 +128,7 @@ public class WingFlap extends TimerTask {
             case FLIGHT_PHASE_PARKED -> setDirection(WingFlapDirection.NEUTRAL);
             case FLIGHT_PHASE_TAKEOFF -> setDirection(WingFlapDirection.DOWN);
             case FLIGHT_PHASE_CRUISING -> {
+                listenForCabinPressure();
                 listenForAltitude();
                 wingFlapState = new WingFlapNeutralState(this);
                 timer.scheduleAtFixedRate(this, 0L, TICK_RATE);

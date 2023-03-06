@@ -24,6 +24,7 @@ public class CabinPressure extends TimerTask {
     public static final String PSI_ID = "Psi";
     public static final String STATUS_ID = "Status";
     public static final String CABIN_PRESSURE_EXCHANGE_KEY = "CabinPressureKey";
+    public static final String CABIN_PRESSURE_EXCHANGE_NAME = "CabinPressureExchange";
     public static final String TOGGLE_PRESSURE_FLAG = "ToggleFlag";
 
     Float currentCabinPressure;
@@ -34,8 +35,7 @@ public class CabinPressure extends TimerTask {
 
     // RabbitMQ variables
     Connection connection;
-    Channel channelReceive;
-    Channel channelFlight;
+    Channel channel;
 
     /*
     * Callback to be used by RabbitMQ
@@ -64,12 +64,18 @@ public class CabinPressure extends TimerTask {
         try {
             ConnectionFactory connectionFactory = new ConnectionFactory();
             connection = connectionFactory.newConnection();
-            channelFlight = connection.createChannel();
-            channelReceive = connection.createChannel();
+            channel = connection.createChannel();
         } catch (IOException | TimeoutException ignored) {}
 
         listenForFlight();
         listenForToggle();
+    }
+
+    private void sendCabinPressure() {
+        try {
+            channel.exchangeDeclare(CABIN_PRESSURE_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            channel.basicPublish(CABIN_PRESSURE_EXCHANGE_NAME, CABIN_PRESSURE_EXCHANGE_KEY, null, TOGGLE_PRESSURE_FLAG.getBytes());
+        } catch (IOException ignored) {}
     }
 
     private void receiveFlightPhase(String flightPhase) {
@@ -90,10 +96,10 @@ public class CabinPressure extends TimerTask {
 
     private void listenForFlight() {
         try {
-            channelFlight.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
-            String queueName = channelFlight.queueDeclare().getQueue();
-            channelFlight.queueBind(queueName, FLIGHT_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY);
-            channelFlight.basicConsume(queueName, true, flightCallback, consumerTag -> {
+            channel.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            String queueName = channel.queueDeclare().getQueue();
+            channel.queueBind(queueName, FLIGHT_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY);
+            channel.basicConsume(queueName, true, flightCallback, consumerTag -> {
             });
         } catch (IOException ignored) {}
     }
@@ -111,10 +117,10 @@ public class CabinPressure extends TimerTask {
 
     private void listenForToggle() {
         try {
-            channelReceive.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
-            String queueName = channelFlight.queueDeclare().getQueue();
-            channelReceive.queueBind(queueName, FLIGHT_EXCHANGE_NAME, CABIN_PRESSURE_EXCHANGE_KEY);
-            channelReceive.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
+            channel.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            String queueName = channel.queueDeclare().getQueue();
+            channel.queueBind(queueName, FLIGHT_EXCHANGE_NAME, CABIN_PRESSURE_EXCHANGE_KEY);
+            channel.basicConsume(queueName, true, deliverCallback, consumerTag -> {});
         } catch (IOException ignored) {}
     }
 
@@ -124,6 +130,7 @@ public class CabinPressure extends TimerTask {
 
     protected void setCabinPressureStatus(CabinPressureStatus newCabinPressureStatus) {
         this.cabinPressureStatus = newCabinPressureStatus;
+        sendCabinPressure();
         System.out.println("Cabin Pressure: " + newCabinPressureStatus);
 
         for (Observer observer : observers) {

@@ -23,6 +23,7 @@ public class Altitude extends TimerTask {
     static final Integer MAX_FLUCTUATION_TAKEOFF_LANDING = 100;
     public static final Integer ALTITUDE_ACCEPTED_DIFFERENCE = 500;
     public static final Integer CRUISING_ALTITUDE = 11000;
+    public static final Integer BREACHED_PRESSURE_ALTITUDE = 8000;
 
     public static final String ALTITUDE_EXCHANGE_NAME = "AltitudeExchange";
     public static final String ALTITUDE_EXCHANGE_KEY = "AltitudeKey";
@@ -31,7 +32,8 @@ public class Altitude extends TimerTask {
     Integer currentAltitude;
     AltitudeState altitudeState;
     LinkedList<Observer> observers = new LinkedList<>();;
-    Timer timer = new Timer();
+    Timer timerCruising = new Timer();
+    Timer timerLanding = new Timer();
 
     // RabbitMQ variables
     Connection connection;
@@ -77,13 +79,19 @@ public class Altitude extends TimerTask {
                 setCurrentAltitude(0);
             case FLIGHT_PHASE_TAKEOFF -> {
                 altitudeState = new TakeoffState(this);
-                timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
+                timerCruising.scheduleAtFixedRate(this, 0L, TICK_RATE);
             }
-            case FLIGHT_PHASE_CRUISING ->
+            case FLIGHT_PHASE_CRUISING -> {
+                timerCruising.cancel();
                 listenForWingFlap();
-            case FLIGHT_PHASE_LANDING ->
+            }
+            case FLIGHT_PHASE_LANDING -> {
                 altitudeState = new LandingState(this);
+                timerLanding.scheduleAtFixedRate(this, 0L, TICK_RATE);
+            }
             case FLIGHT_PHASE_LANDED -> {
+                timerLanding.cancel();
+
                 try {
                     connection.close();
                 } catch (IOException ignored) {}
@@ -115,8 +123,6 @@ public class Altitude extends TimerTask {
             observer.update(ALTITUDE_ID, currentAltitudeString);
         }
     }
-
-
 
     protected void sendNewFlightPhase(String flag) {
             try {
