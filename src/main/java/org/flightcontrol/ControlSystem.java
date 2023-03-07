@@ -11,12 +11,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 import static org.flightcontrol.actuator.landinggear.LandingGear.LANDING_GEAR_ID;
+import static org.flightcontrol.actuator.oxygenmasks.OxygenMask.OXYGEN_MASK_ID;
 import static org.flightcontrol.actuator.tailflap.TailFlap.TAIL_FLAP_ID;
 import static org.flightcontrol.actuator.wingflap.WingFlap.WING_FLAP_ID;
 import static org.flightcontrol.flight.Flight.FLIGHT_ID;
 import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_ID;
 import static org.flightcontrol.sensor.cabinpressure.CabinPressure.*;
-import static org.flightcontrol.actuator.wingflap.gps.GPS.GPS_ID;
+import static org.flightcontrol.sensor.gps.GPS.GPS_ID;
 
 public class ControlSystem implements Observer {
 
@@ -30,6 +31,7 @@ public class ControlSystem implements Observer {
     JLabel landingGearValue = new JLabel();
     JLabel cabinPressureStatusValue = new JLabel();
     JLabel cabinPressurePsiValue = new JLabel();
+    JLabel oxygenMaskValue = new JLabel();
 
     public static void main(String[] args) {
         ControlSystem controlSystem = new ControlSystem();
@@ -58,6 +60,7 @@ public class ControlSystem implements Observer {
                         cabinPressurePsiValue.setText(updatedValue[2]);
                     }
                 }
+                case OXYGEN_MASK_ID -> oxygenMaskValue.setText(updatedValue[1]);
             }
         }
     }
@@ -68,7 +71,7 @@ public class ControlSystem implements Observer {
 
         JFrame jFrame = new JFrame("Flight Control System");
         JPanel mainPanel = new JPanel(new BorderLayout());
-        JPanel jPanel = new JPanel(new GridLayout(8, 2));
+        JPanel jPanel = new JPanel(new GridLayout(9, 2));
         jFrame.setSize(500, 500);
 
         JLabel title = new JLabel("Boeing 777 Control System");
@@ -85,6 +88,7 @@ public class ControlSystem implements Observer {
         JLabel landingGearLabel = new JLabel("Landing Gear:");
         JLabel cabinPressureStatusLabel = new JLabel("Cabin Pressure Status:");
         JLabel cabinPressurePsiLabel = new JLabel("Cabin Pressure:");
+        JLabel oxygenMaskLabel = new JLabel("Oxygen Masks:");
 
         // Add all JLabels to linked list
         labels.add(flightLabel);
@@ -103,6 +107,8 @@ public class ControlSystem implements Observer {
         labels.add(cabinPressureStatusValue);
         labels.add(cabinPressurePsiLabel);
         labels.add(cabinPressurePsiValue);
+        labels.add(oxygenMaskLabel);
+        labels.add(oxygenMaskValue);
 
         // Set parameters for JLabels
         for (JLabel label: labels) {

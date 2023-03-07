@@ -4,11 +4,12 @@ import com.rabbitmq.client.*;
 import org.flightcontrol.ControlSystem;
 import org.flightcontrol.Observer;
 import org.flightcontrol.actuator.landinggear.LandingGear;
+import org.flightcontrol.actuator.oxygenmasks.OxygenMask;
 import org.flightcontrol.actuator.tailflap.TailFlap;
 import org.flightcontrol.actuator.wingflap.WingFlap;
 import org.flightcontrol.sensor.altitude.Altitude;
 import org.flightcontrol.sensor.cabinpressure.CabinPressure;
-import org.flightcontrol.actuator.wingflap.gps.GPS;
+import org.flightcontrol.sensor.gps.GPS;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -56,6 +57,7 @@ public class Flight implements Runnable {
     Altitude altitude = new Altitude();
     GPS gps = new GPS();
     CabinPressure cabinPressure = new CabinPressure();
+    OxygenMask oxygenMask = new OxygenMask();
 
     // Actuators
     WingFlap wingFlap = new WingFlap();
@@ -71,6 +73,7 @@ public class Flight implements Runnable {
         tailFlap.addObserver(controlSystem);
         landingGear.addObserver(controlSystem);
         cabinPressure.addObserver(controlSystem);
+        oxygenMask.addObserver(controlSystem);
 
         try {
             ConnectionFactory connectionFactory = new ConnectionFactory();

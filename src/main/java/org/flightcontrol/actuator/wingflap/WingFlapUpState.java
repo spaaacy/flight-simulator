@@ -13,7 +13,7 @@ public class WingFlapUpState implements WingFlapState {
 
     @Override
     public void controlFlaps() {
-        wingFlap.setDirection(WingFlapDirection.UP);
+        wingFlap.setWingFlapDirection(WingFlapDirection.UP);
 
         int fluctuation = (int) (Math.random() * MAX_FLUCTUATION_UP_DOWN * 2) - MAX_FLUCTUATION_UP_DOWN;
         Integer newAltitude = wingFlap.currentAltitude - INCREMENT_VALUE_UP_DOWN + fluctuation;

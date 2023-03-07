@@ -21,7 +21,7 @@ public class Altitude extends TimerTask {
     public static final String LANDED_FLAG = "LandedFlag";
     static final Integer INCREMENT_TAKEOFF_LANDING = 500;
     static final Integer MAX_FLUCTUATION_TAKEOFF_LANDING = 100;
-    public static final Integer ALTITUDE_ACCEPTED_DIFFERENCE = 500;
+    public static final Integer ALTITUDE_ACCEPTED_DIFFERENCE = 1000;
     public static final Integer CRUISING_ALTITUDE = 11000;
     public static final Integer BREACHED_PRESSURE_ALTITUDE = 8000;
 

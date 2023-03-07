@@ -23,9 +23,9 @@ public class WingFlap extends TimerTask {
 
     // Plane attempts to fly 10500-11500
     public static final String WING_FLAP_ID = "WingFlap";
-    static final Integer MAX_FLUCTUATION_UP_DOWN = 10;
-    static final Integer MAX_FLUCTUATION_NEUTRAL = 750;
-    static final Integer INCREMENT_VALUE_UP_DOWN = 30;
+    static final Integer MAX_FLUCTUATION_UP_DOWN = 25;
+    static final Integer MAX_FLUCTUATION_NEUTRAL = 1500;
+    static final Integer INCREMENT_VALUE_UP_DOWN = 100;
 
     Integer currentAltitude;
     WingFlapState wingFlapState;
@@ -41,9 +41,11 @@ public class WingFlap extends TimerTask {
     /*
      * Callback to be used by Rabbit MQ receive
      */
+    // TODO: engineCallback to react to 0 RPM
+
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-        currentAltitude = Integer.valueOf(message);
+        setCurrentAltitude(Integer.valueOf(message));
     };
 
     DeliverCallback flightCallback = (consumerTag, delivery) -> {
@@ -56,10 +58,11 @@ public class WingFlap extends TimerTask {
         if (message.equals(TOGGLE_PRESSURE_FLAG)) {
             if (targetAltitude.equals(CRUISING_ALTITUDE)) {
                 targetAltitude = BREACHED_PRESSURE_ALTITUDE;
+                wingFlapState = new WingFlapUpState(this);
             } else {
                 targetAltitude = CRUISING_ALTITUDE;
+                wingFlapState = new WingFlapDownState(this);
             }
-            wingFlapState = new WingFlapNeutralState(this);
         }
     };
 
@@ -110,6 +113,8 @@ public class WingFlap extends TimerTask {
         } catch (IOException ignored) {}
     }
 
+    // TODO: listenForEngine()
+
     public void setCurrentAltitude(Integer currentAltitude) {
         this.currentAltitude = currentAltitude;
     }
@@ -124,8 +129,8 @@ public class WingFlap extends TimerTask {
 
     public void receiveFlightPhase(String flightPhase) {
         switch (flightPhase) {
-            case FLIGHT_PHASE_PARKED -> setDirection(WingFlapDirection.NEUTRAL);
-            case FLIGHT_PHASE_TAKEOFF -> setDirection(WingFlapDirection.DOWN);
+            case FLIGHT_PHASE_PARKED -> setWingFlapDirection(WingFlapDirection.NEUTRAL);
+            case FLIGHT_PHASE_TAKEOFF -> setWingFlapDirection(WingFlapDirection.DOWN);
             case FLIGHT_PHASE_CRUISING -> {
                 listenForCabinPressure();
                 listenForAltitude();
@@ -134,10 +139,10 @@ public class WingFlap extends TimerTask {
             }
             case FLIGHT_PHASE_LANDING -> {
                 timer.cancel();
-                setDirection(WingFlapDirection.UP);
+                setWingFlapDirection(WingFlapDirection.UP);
             }
             case FLIGHT_PHASE_LANDED -> {
-                setDirection(WingFlapDirection.NEUTRAL);
+                setWingFlapDirection(WingFlapDirection.NEUTRAL);
                 try {
                     connection.close();
                 } catch (IOException ignored) {
@@ -150,7 +155,7 @@ public class WingFlap extends TimerTask {
         observers.add(observer);
     }
 
-    public void setDirection(WingFlapDirection wingFlapDirection) {
+    public void setWingFlapDirection(WingFlapDirection wingFlapDirection) {
         this.wingFlapDirection = wingFlapDirection;
         System.out.println("WingFlap: " + wingFlapDirection.toString());
         for (Observer observer : observers) {

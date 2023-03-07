@@ -1,4 +1,4 @@
-package org.flightcontrol.actuator.wingflap.gps;
+package org.flightcontrol.sensor.gps;
 
 import com.rabbitmq.client.*;
 import org.flightcontrol.Observer;

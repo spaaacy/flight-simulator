@@ -2,7 +2,6 @@ package org.flightcontrol.actuator.wingflap;
 
 import static org.flightcontrol.actuator.wingflap.WingFlap.*;
 import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_ACCEPTED_DIFFERENCE;
-import static org.flightcontrol.sensor.altitude.Altitude.CRUISING_ALTITUDE;
 
 public class WingFlapDownState implements WingFlapState {
 
@@ -14,7 +13,7 @@ public class WingFlapDownState implements WingFlapState {
 
     @Override
     public void controlFlaps() {
-        wingFlap.setDirection(WingFlapDirection.DOWN);
+        wingFlap.setWingFlapDirection(WingFlapDirection.DOWN);
 
         Integer fluctuation = (int) (Math.random() * MAX_FLUCTUATION_UP_DOWN * 2) - MAX_FLUCTUATION_UP_DOWN;
         Integer newAltitude = wingFlap.currentAltitude + INCREMENT_VALUE_UP_DOWN + fluctuation;

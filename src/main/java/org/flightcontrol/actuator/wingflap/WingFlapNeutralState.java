@@ -13,7 +13,7 @@ public class WingFlapNeutralState implements WingFlapState {
 
     @Override
     public void controlFlaps() {
-        wingFlap.setDirection(WingFlapDirection.NEUTRAL);
+        wingFlap.setWingFlapDirection(WingFlapDirection.NEUTRAL);
 
         Integer fluctuation = (int) (Math.random() * MAX_FLUCTUATION_NEUTRAL * 2) - MAX_FLUCTUATION_NEUTRAL;
         Integer newAltitude = wingFlap.targetAltitude + fluctuation;

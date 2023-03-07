@@ -1,8 +1,8 @@
 package org.flightcontrol.actuator.tailflap;
 
 import static org.flightcontrol.actuator.tailflap.TailFlap.*;
-import static org.flightcontrol.actuator.wingflap.gps.GPS.BEARING_DESTINATION;
-import static org.flightcontrol.actuator.wingflap.gps.GPS.GPS_ACCEPTED_DIFFERENCE;
+import static org.flightcontrol.sensor.gps.GPS.BEARING_DESTINATION;
+import static org.flightcontrol.sensor.gps.GPS.GPS_ACCEPTED_DIFFERENCE;
 
 public class TailFlapLeftState implements TailFlapState {
 

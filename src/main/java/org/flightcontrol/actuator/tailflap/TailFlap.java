@@ -11,7 +11,7 @@ import java.util.TimerTask;
 import java.util.concurrent.TimeoutException;
 
 import static org.flightcontrol.flight.Flight.*;
-import static org.flightcontrol.actuator.wingflap.gps.GPS.*;
+import static org.flightcontrol.sensor.gps.GPS.*;
 
 enum TailFlapDirection {LEFT, RIGHT, NEUTRAL};
 
