@@ -38,17 +38,13 @@ public class OxygenMask {
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         if (message.equals(TOGGLE_PRESSURE_FLAG)) {
-            if (oxygenMaskState.equals(OxygenMaskState.STOWED)) {
-                setOxygenMaskState(OxygenMaskState.DEPLOYED);
-            } else {
+            if (oxygenMaskState == null ||
+                    oxygenMaskState.equals(OxygenMaskState.DEPLOYED)) {
                 setOxygenMaskState(OxygenMaskState.STOWED);
+            } else {
+                setOxygenMaskState(OxygenMaskState.DEPLOYED);
             }
         }
-    };
-
-    DeliverCallback flightCallback = (consumerTag, delivery) -> {
-        String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-        receiveFlightPhase(message);
     };
 
 
@@ -60,7 +56,6 @@ public class OxygenMask {
         } catch (IOException | TimeoutException ignored) { }
 
         listenForCabinPressure();
-        listenForFlight();
     }
 
     private void receiveFlightPhase(String flightPhase) {
@@ -71,16 +66,6 @@ public class OxygenMask {
 
     public void addObserver(Observer observer) {
         observers.add(observer);
-    }
-
-    private void listenForFlight() {
-        try {
-            channel.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
-            String queueName = channel.queueDeclare().getQueue();
-            channel.queueBind(queueName, FLIGHT_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY);
-            channel.basicConsume(queueName, true, flightCallback, consumerTag -> {
-            });
-        } catch (IOException ignored) {}
     }
 
     private void listenForCabinPressure() {
