@@ -18,7 +18,6 @@ public class Altitude extends TimerTask {
 
     public static final String ALTITUDE_ID = "Altitude";
     public static final String CRUISING_FLAG = "CruisingFlag";
-    public static final String LANDED_FLAG = "LandedFlag";
     static final Integer INCREMENT_TAKEOFF_LANDING = 500;
     static final Integer MAX_FLUCTUATION_TAKEOFF_LANDING = 100;
     public static final Integer ALTITUDE_ACCEPTED_DIFFERENCE = 1000;
@@ -80,7 +79,7 @@ public class Altitude extends TimerTask {
             case FLIGHT_PHASE_PARKED ->
                 setCurrentAltitude(0);
             case FLIGHT_PHASE_TAKEOFF -> {
-                altitudeState = new TakeoffState(this);
+                altitudeState = new AltitudeTakeoffState(this);
                 timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
             }
             case FLIGHT_PHASE_CRUISING -> {
@@ -89,11 +88,9 @@ public class Altitude extends TimerTask {
             }
             case FLIGHT_PHASE_LANDING -> {
                 isCruising = false;
-                altitudeState = new LandingState(this);
+                altitudeState = new AltitudeLandingState(this);
             }
             case FLIGHT_PHASE_LANDED -> {
-                timer.cancel();
-
                 try {
                     connection.close();
                 } catch (IOException ignored) {}
@@ -126,10 +123,12 @@ public class Altitude extends TimerTask {
         }
     }
 
-    protected void sendNewFlightPhase(String flag) {
+    // TODO: listenForEngine()
+
+    protected void sendCruisingFlag() {
             try {
                 channel.exchangeDeclare(ALTITUDE_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
-                channel.basicPublish(ALTITUDE_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY, null, flag.getBytes());
+                channel.basicPublish(ALTITUDE_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY, null, CRUISING_FLAG.getBytes());
             } catch (IOException ignored) {
             }
     }

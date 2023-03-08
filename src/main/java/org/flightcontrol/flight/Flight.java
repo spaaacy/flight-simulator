@@ -9,6 +9,7 @@ import org.flightcontrol.actuator.tailflap.TailFlap;
 import org.flightcontrol.actuator.wingflap.WingFlap;
 import org.flightcontrol.sensor.altitude.Altitude;
 import org.flightcontrol.sensor.cabinpressure.CabinPressure;
+import org.flightcontrol.sensor.engine.Engine;
 import org.flightcontrol.sensor.gps.GPS;
 
 import java.io.IOException;
@@ -19,8 +20,10 @@ import java.util.concurrent.TimeoutException;
 import static org.flightcontrol.sensor.altitude.Altitude.*;
 import static org.flightcontrol.sensor.cabinpressure.CabinPressure.CABIN_PRESSURE_EXCHANGE_KEY;
 import static org.flightcontrol.sensor.cabinpressure.CabinPressure.TOGGLE_PRESSURE_FLAG;
+import static org.flightcontrol.sensor.engine.Engine.ENGINE_EXCHANGE_NAME;
+import static org.flightcontrol.sensor.engine.Engine.LANDED_FLAG;
 
-public class Flight implements Runnable {
+public class Flight {
 
     // Flight phases
     public static final String FLIGHT_PHASE_PARKED = "PARKED";
@@ -38,15 +41,23 @@ public class Flight implements Runnable {
     Connection connection;
     Channel channel;
 
-    // Callback to be used by Rabbit MQ receive
+    // TODO: Change LANDED to PARKED
+
+    /*
+     * Callback to be used by Rabbit MQ receive
+     */
+    DeliverCallback engineCallback = (consumerTag, delivery) -> {
+        String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+        if (LANDED_FLAG.equals(message)) {
+            setFlightPhase(FLIGHT_PHASE_LANDED);
+            connection.close();
+        }
+    };
+
     DeliverCallback altitudeCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-        switch (message) {
-            case CRUISING_FLAG -> setFlightPhase(FLIGHT_PHASE_CRUISING);
-            case LANDED_FLAG -> {
-                setFlightPhase(FLIGHT_PHASE_LANDED);
-                connection.close();
-            }
+        if (CRUISING_FLAG.equals(message)) {
+            setFlightPhase(FLIGHT_PHASE_CRUISING);
         }
     };
 
@@ -58,6 +69,7 @@ public class Flight implements Runnable {
     GPS gps = new GPS();
     CabinPressure cabinPressure = new CabinPressure();
     OxygenMask oxygenMask = new OxygenMask();
+    Engine engine = new Engine();
 
     // Actuators
     WingFlap wingFlap = new WingFlap();
@@ -74,6 +86,7 @@ public class Flight implements Runnable {
         landingGear.addObserver(controlSystem);
         cabinPressure.addObserver(controlSystem);
         oxygenMask.addObserver(controlSystem);
+        engine.addObserver(controlSystem);
 
         try {
             ConnectionFactory connectionFactory = new ConnectionFactory();
@@ -81,11 +94,8 @@ public class Flight implements Runnable {
             channel = connection.createChannel();
         } catch (IOException | TimeoutException ignored) {}
 
-    }
-
-    @Override
-    public void run() {
         listenForAltitude();
+        listenForEngine();
         setFlightPhase(FLIGHT_PHASE_PARKED);
     }
 
@@ -136,6 +146,17 @@ public class Flight implements Runnable {
             channel.basicConsume(queueName, true, altitudeCallback, consumerTag -> {});
         } catch (IOException ignored) { }
     }
+
+    private void listenForEngine() {
+        try {
+            channel.exchangeDeclare(ENGINE_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            String queueName = channel.queueDeclare().getQueue();
+            channel.queueBind(queueName, ENGINE_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY);
+            channel.basicConsume(queueName, true, engineCallback, consumerTag -> {
+            });
+        } catch (IOException ignored) {}
+    }
+
     public void addObserver(Observer observer) {
         observers.add(observer);
     }

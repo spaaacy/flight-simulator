@@ -2,11 +2,11 @@ package org.flightcontrol.sensor.altitude;
 
 import static org.flightcontrol.sensor.altitude.Altitude.*;
 
-public class TakeoffState implements AltitudeState {
+public class AltitudeTakeoffState implements AltitudeState {
 
     Altitude altitude;
 
-    public TakeoffState(Altitude altitude) {
+    public AltitudeTakeoffState(Altitude altitude) {
         this.altitude = altitude;
     }
 
@@ -22,7 +22,7 @@ public class TakeoffState implements AltitudeState {
             altitude.setCurrentAltitude(newAltitude);
 
         } else {
-            altitude.sendNewFlightPhase(CRUISING_FLAG);
+            altitude.sendCruisingFlag();
         }
     }
 }

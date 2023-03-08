@@ -2,11 +2,11 @@ package org.flightcontrol.sensor.cabinpressure;
 
 import static org.flightcontrol.sensor.cabinpressure.CabinPressure.*;
 
-public class NormalPressureState implements CabinPressureState{
+public class CabinPressureNormalState implements CabinPressureState{
 
     CabinPressure cabinPressure;
 
-    public NormalPressureState(CabinPressure cabinPressure) {
+    public CabinPressureNormalState(CabinPressure cabinPressure) {
         this.cabinPressure = cabinPressure;
         cabinPressure.setCabinPressureStatus(CabinPressureStatus.NORMAL);
     }

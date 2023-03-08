@@ -2,11 +2,11 @@ package org.flightcontrol.sensor.altitude;
 
 import static org.flightcontrol.sensor.altitude.Altitude.*;
 
-public class LandingState implements AltitudeState  {
+public class AltitudeLandingState implements AltitudeState  {
 
     Altitude altitude;
 
-    public LandingState(Altitude altitude) {
+    public AltitudeLandingState(Altitude altitude) {
         this.altitude = altitude;
     }
 
@@ -14,10 +14,9 @@ public class LandingState implements AltitudeState  {
     public void generateAltitude() {
         if (altitude.currentAltitude > 0) {
 
-            int minPossibleNextValue = altitude.currentAltitude - INCREMENT_TAKEOFF_LANDING - MAX_FLUCTUATION_TAKEOFF_LANDING;
-            int largestPossibleDecrement = INCREMENT_TAKEOFF_LANDING + MAX_FLUCTUATION_TAKEOFF_LANDING;
+            int smallestPossibleNextValue = altitude.currentAltitude - INCREMENT_TAKEOFF_LANDING - MAX_FLUCTUATION_TAKEOFF_LANDING;
 
-            if (minPossibleNextValue > largestPossibleDecrement) {
+            if (smallestPossibleNextValue >= 0) {
                 int fluctuation = (int)(Math.random() * MAX_FLUCTUATION_TAKEOFF_LANDING * 2) - MAX_FLUCTUATION_TAKEOFF_LANDING;
                 Integer newAltitude = altitude.currentAltitude - INCREMENT_TAKEOFF_LANDING + fluctuation;
                 altitude.setCurrentAltitude(newAltitude);
@@ -26,9 +25,7 @@ public class LandingState implements AltitudeState  {
             }
 
         } else {
-
-            altitude.sendNewFlightPhase(LANDED_FLAG);
-
+            altitude.timer.cancel();
         }
     }
 

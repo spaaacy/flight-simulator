@@ -44,8 +44,8 @@ public class CabinPressure extends TimerTask {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         if (message.equals(TOGGLE_PRESSURE_FLAG)){
             switch (cabinPressureStatus) {
-                case BREACHED -> cabinPressureState = new NormalPressureState(this);
-                case NORMAL -> cabinPressureState = new BreachedPressureState(this);
+                case BREACHED -> cabinPressureState = new CabinPressureNormalState(this);
+                case NORMAL -> cabinPressureState = new CabinPressureBreachedState(this);
             }
         }
     };
@@ -81,11 +81,11 @@ public class CabinPressure extends TimerTask {
     private void receiveFlightPhase(String flightPhase) {
         switch (flightPhase) {
             case FLIGHT_PHASE_PARKED -> {
-                cabinPressureState = new NormalPressureState(this);
+                cabinPressureState = new CabinPressureNormalState(this);
                 timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
             }
             case FLIGHT_PHASE_LANDED -> {
-                cabinPressureState = new NormalPressureState(this);
+                cabinPressureState = new CabinPressureNormalState(this);
                 timer.cancel();
                 try {
                     connection.close();
