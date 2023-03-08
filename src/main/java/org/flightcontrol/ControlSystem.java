@@ -40,7 +40,7 @@ public class ControlSystem implements Observer {
         new ControlSystem();
     }
 
-    // TODO: Add gps destination
+    // TODO: Add description column
 
     @Override
     public void update(String... updatedValue) {

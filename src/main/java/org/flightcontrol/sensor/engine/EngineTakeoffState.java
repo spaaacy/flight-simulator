@@ -13,6 +13,12 @@ public class EngineTakeoffState implements EngineState {
     @Override
     public void generateRpm() {
         int largestPossibleNextValue = engine.currentPercentage + MAX_FLUCTUATION + INCREMENT_TAKEOFF_LANDING;
+
+        if (largestPossibleNextValue >= TAKEOFF_LANDING_PERCENTAGE && engine.isAltitudeZero) {
+            engine.sendTakeoffFlagToAltitude();
+            engine.isAltitudeZero = false;
+        }
+
         if (largestPossibleNextValue <= CRUISING_PERCENTAGE) {
             Integer fluctuation = (int) (Math.random() * MAX_FLUCTUATION * 2) - MAX_FLUCTUATION;
             Integer newPercentage = engine.currentPercentage + INCREMENT_TAKEOFF_LANDING + fluctuation;
@@ -21,5 +27,7 @@ public class EngineTakeoffState implements EngineState {
             engine.setCurrentPercentage(CRUISING_PERCENTAGE);
             engine.engineState = new EngineCruisingState(engine);
         }
+
+
     }
 }

@@ -21,7 +21,6 @@ import static org.flightcontrol.sensor.altitude.Altitude.*;
 import static org.flightcontrol.sensor.cabinpressure.CabinPressure.CABIN_PRESSURE_EXCHANGE_KEY;
 import static org.flightcontrol.sensor.cabinpressure.CabinPressure.TOGGLE_PRESSURE_FLAG;
 import static org.flightcontrol.sensor.engine.Engine.ENGINE_EXCHANGE_NAME;
-import static org.flightcontrol.sensor.engine.Engine.LANDED_FLAG;
 
 public class Flight {
 
@@ -31,6 +30,11 @@ public class Flight {
     public static final String FLIGHT_PHASE_CRUISING = "CRUISING";
     public static final String FLIGHT_PHASE_LANDING = "LANDING";
     public static final String FLIGHT_PHASE_LANDED = "LANDED";
+
+    public static final String TAKEOFF_FLAG = "TakeoffFlag";
+    public static final String CRUISING_FLAG = "CruisingFlag";
+    public static final String LANDING_FLAG = "LandingFlag"; // TODO: Rename to LANDED_FLAG
+    public static final String LANDED_FLAG = "LandedFlag"; // TODO: Rename to PARKED_FLAG
 
     public static final String FLIGHT_ID = "Flight";
     public static final String FLIGHT_EXCHANGE_NAME = "FlightExchange";
@@ -94,8 +98,8 @@ public class Flight {
             channel = connection.createChannel();
         } catch (IOException | TimeoutException ignored) {}
 
-        listenForAltitude();
-        listenForEngine();
+        listenForCruisingFlagFromAltitude();
+        listenForLandedFlagFromEngine();
         setFlightPhase(FLIGHT_PHASE_PARKED);
     }
 
@@ -138,7 +142,7 @@ public class Flight {
         } catch(IOException ignored) {}
     }
 
-    private void listenForAltitude() {
+    private void listenForCruisingFlagFromAltitude() {
         try {
             channel.exchangeDeclare(ALTITUDE_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
             String queueName = channel.queueDeclare().getQueue();
@@ -147,7 +151,7 @@ public class Flight {
         } catch (IOException ignored) { }
     }
 
-    private void listenForEngine() {
+    private void listenForLandedFlagFromEngine() {
         try {
             channel.exchangeDeclare(ENGINE_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
             String queueName = channel.queueDeclare().getQueue();
