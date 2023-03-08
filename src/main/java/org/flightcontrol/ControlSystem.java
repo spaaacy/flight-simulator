@@ -6,6 +6,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -40,7 +44,31 @@ public class ControlSystem implements Observer {
         new ControlSystem();
     }
 
+
     // TODO: Add description column
+
+    public void restartApplication()
+    {
+        try {
+            final String javaBin = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
+            final File currentJar = new File(ControlSystem.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+
+            /* is it a jar file? */
+            if(!currentJar.getName().endsWith(".jar")) {
+                return;
+            }
+
+            /* Build command: java -jar application.jar */
+            final ArrayList<String> command = new ArrayList<String>();
+            command.add(javaBin);
+            command.add("-jar");
+            command.add(currentJar.getPath());
+
+            final ProcessBuilder builder = new ProcessBuilder(command);
+            builder.start();
+            System.exit(0);
+        } catch (URISyntaxException | IOException ignored) {}
+    }
 
     @Override
     public void update(String... updatedValue) {
@@ -149,6 +177,15 @@ public class ControlSystem implements Observer {
             }
         });
         buttons.add(pressureButton);
+
+        JButton relaunchButton = new JButton("Relaunch");
+        relaunchButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                restartApplication();
+            }
+        });
+        buttons.add(relaunchButton);
 
         for (JButton button : buttons){
             buttonPanel.add(button);

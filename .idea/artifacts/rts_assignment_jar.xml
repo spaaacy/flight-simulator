@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="rts-assignment:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/rts_assignment_jar</output-path>
+    <root id="archive" name="rts-assignment.jar">
+      <element id="module-output" name="rts-assignment" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/slf4j/slf4j-api/2.0.5/slf4j-api-2.0.5.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/slf4j/slf4j-simple/2.0.5/slf4j-simple-2.0.5.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/rabbitmq/amqp-client/5.16.0/amqp-client-5.16.0.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
