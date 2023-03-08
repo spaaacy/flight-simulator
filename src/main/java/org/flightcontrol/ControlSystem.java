@@ -3,6 +3,7 @@ package org.flightcontrol;
 import org.flightcontrol.flight.Flight;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,18 +15,23 @@ import java.util.LinkedList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
+import static org.flightcontrol.actuator.landinggear.LandingGear.LANDING_GEAR_ALTITUDE;
 import static org.flightcontrol.actuator.landinggear.LandingGear.LANDING_GEAR_ID;
 import static org.flightcontrol.actuator.oxygenmasks.OxygenMask.OXYGEN_MASK_ID;
 import static org.flightcontrol.actuator.tailflap.TailFlap.TAIL_FLAP_ID;
 import static org.flightcontrol.actuator.wingflap.WingFlap.WING_FLAP_ID;
-import static org.flightcontrol.flight.Flight.FLIGHT_ID;
-import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_ID;
+import static org.flightcontrol.flight.Flight.*;
+import static org.flightcontrol.sensor.altitude.Altitude.*;
 import static org.flightcontrol.sensor.cabinpressure.CabinPressure.*;
-import static org.flightcontrol.sensor.engine.Engine.ENGINE_ID;
+import static org.flightcontrol.sensor.engine.Engine.*;
+import static org.flightcontrol.sensor.gps.GPS.BEARING_DESTINATION;
 import static org.flightcontrol.sensor.gps.GPS.GPS_ID;
+import static org.flightcontrol.sensor.gps.GPS.BEARING_UNIT;
 
 public class ControlSystem implements Observer {
 
+
+    private static final String GUI_FONT = "Arial";
 
     JLabel flightValue = new JLabel();
     JLabel altitudeValue = new JLabel();
@@ -93,14 +99,17 @@ public class ControlSystem implements Observer {
         }
     }
 
+
     ControlSystem() {
         LinkedList<JLabel> labels = new LinkedList<>();
         LinkedList<JButton> buttons = new LinkedList<>();
 
         JFrame jFrame = new JFrame("Flight Control System");
         JPanel mainPanel = new JPanel(new BorderLayout());
-        JPanel jPanel = new JPanel(new GridLayout(10, 2));
-        jFrame.setSize(500, 500);
+        Border border = BorderFactory.createEmptyBorder(25,25,25,25);
+        mainPanel.setBorder(border);
+        JPanel jPanel = new JPanel(new GridLayout(10, 3));
+        jFrame.setSize(900, 750);
 
         JLabel title = new JLabel("Boeing 777 Control System");
         title.setFont(new Font("Arial", Font.BOLD, 30));
@@ -119,39 +128,72 @@ public class ControlSystem implements Observer {
         JLabel oxygenMaskLabel = new JLabel("Oxygen Masks:");
         JLabel engineLabel = new JLabel("Engine:");
 
+        JLabel flightDescription = new JLabel("", SwingConstants.LEFT);
+        JLabel altitudeDescription = new JLabel("<html><p style=\"text-align:center\">Cruising altitude is<br>" + (CRUISING_ALTITUDE-ALTITUDE_ACCEPTED_DIFFERENCE) + HEIGHT_UNIT +
+                " to " + (CRUISING_ALTITUDE+ALTITUDE_ACCEPTED_DIFFERENCE) + HEIGHT_UNIT, SwingConstants.LEFT);
+        JLabel wingFlapDescription = new JLabel("", SwingConstants.LEFT);
+        JLabel gpsDescription = new JLabel("Destination is at " + BEARING_DESTINATION + BEARING_UNIT, SwingConstants.LEFT);
+        JLabel tailFlapDescription = new JLabel("", SwingConstants.LEFT);
+        JLabel landingGearDescription = new JLabel("Deploys at " + LANDING_GEAR_ALTITUDE + HEIGHT_UNIT, SwingConstants.LEFT);
+        JLabel cabinPressureStatusDescription = new JLabel("", SwingConstants.LEFT);
+        JLabel cabinPressurePsiDescription = new JLabel("", SwingConstants.LEFT);
+        JLabel oxygenMaskDescription = new JLabel("", SwingConstants.LEFT);
+        JLabel engineDescription = new JLabel("Takeoff/Landing at " + TAKEOFF_LANDING_PERCENTAGE + PERCENTAGE_UNIT, SwingConstants.LEFT);
+
         // Add all JLabels to linked list
         labels.add(flightLabel);
         labels.add(flightValue);
+        labels.add(flightDescription);
+
         labels.add(altitudeLabel);
         labels.add(altitudeValue);
+        labels.add(altitudeDescription);
+
         labels.add(wingFlapLabel);
         labels.add(wingFlapValue);
+        labels.add(wingFlapDescription);
+
         labels.add(gpsLabel);
         labels.add(gpsValue);
+        labels.add(gpsDescription);
+
         labels.add(tailFlapLabel);
         labels.add(tailFlapValue);
+        labels.add(tailFlapDescription);
+
         labels.add(landingGearLabel);
         labels.add(landingGearValue);
+        labels.add(landingGearDescription);
+
         labels.add(cabinPressureStatusLabel);
         labels.add(cabinPressureStatusValue);
+        labels.add(cabinPressureStatusDescription);
+
         labels.add(cabinPressurePsiLabel);
         labels.add(cabinPressurePsiValue);
+        labels.add(cabinPressurePsiDescription);
+
         labels.add(oxygenMaskLabel);
         labels.add(oxygenMaskValue);
+        labels.add(oxygenMaskDescription);
+
         labels.add(engineLabel);
         labels.add(engineValue);
+        labels.add(engineDescription);
 
         // Set parameters for JLabels
         for (JLabel label: labels) {
-            label.setHorizontalAlignment(SwingConstants.CENTER);
-            label.setFont(new Font("Courier", Font.PLAIN, 20));
+//            if (label.getHorizontalAlignment() != SwingConstants.LEFT){
+//                label.setHorizontalAlignment(SwingConstants.CENTER);
+//            }
+            label.setFont(new Font(GUI_FONT, Font.PLAIN, 20));
             jPanel.add(label);
         }
 
         /*
          * Buttons
          */
-        JButton takeoffButton = new JButton("Initiate Takeoff");
+        JButton takeoffButton = new JButton("Takeoff");
         takeoffButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -160,7 +202,7 @@ public class ControlSystem implements Observer {
         });
         buttons.add(takeoffButton);
 
-        JButton landingButton = new JButton("Initiate Landing");
+        JButton landingButton = new JButton("Land");
         landingButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -169,7 +211,7 @@ public class ControlSystem implements Observer {
         });
         buttons.add(landingButton);
 
-        JButton pressureButton = new JButton("Toggle Cabin Pressure");
+        JButton pressureButton = new JButton("Cabin Pressure");
         pressureButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -188,6 +230,7 @@ public class ControlSystem implements Observer {
         buttons.add(relaunchButton);
 
         for (JButton button : buttons){
+            button.setPreferredSize(new Dimension(150, 40));
             buttonPanel.add(button);
         }
 

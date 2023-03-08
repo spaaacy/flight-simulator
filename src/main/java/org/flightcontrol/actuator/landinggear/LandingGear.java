@@ -16,7 +16,7 @@ enum LandingGearStatus {DEPLOYED, STOWED}
 public class LandingGear {
 
     public static final String LANDING_GEAR_ID = "LandingGear";
-    private static final Integer LANDING_GEAR_ALTITUDE = 5000;
+    public static final Integer LANDING_GEAR_ALTITUDE = 5000;
 
     LandingGearStatus landingGearStatus;
     LinkedList<Observer> observers = new LinkedList<>();

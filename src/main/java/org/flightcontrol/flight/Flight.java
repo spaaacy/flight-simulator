@@ -33,19 +33,17 @@ public class Flight {
 
     public static final String TAKEOFF_FLAG = "TakeoffFlag";
     public static final String CRUISING_FLAG = "CruisingFlag";
-    public static final String LANDING_FLAG = "LandingFlag"; // TODO: Rename to LANDED_FLAG
-    public static final String LANDED_FLAG = "LandedFlag"; // TODO: Rename to PARKED_FLAG
+    public static final String LANDING_FLAG = "LandingFlag";
+    public static final String LANDED_FLAG = "LandedFlag";
 
     public static final String FLIGHT_ID = "Flight";
     public static final String FLIGHT_EXCHANGE_NAME = "FlightExchange";
     public static final String FLIGHT_EXCHANGE_KEY = "FlightKey";
-    public static final Long TICK_RATE = 600L; // Used to control execution speed
+    public static final Long TICK_RATE = 200L; // Used to control execution speed
 
     // RabbitMQ variables
     Connection connection;
     Channel channel;
-
-    // TODO: Change LANDED to PARKED
 
     /*
      * Callback to be used by Rabbit MQ receive
@@ -163,29 +161,5 @@ public class Flight {
 
     public void addObserver(Observer observer) {
         observers.add(observer);
-    }
-
-    public Altitude getAltitude() {
-        return altitude;
-    }
-
-    public GPS getGps() {
-        return gps;
-    }
-
-    public WingFlap getWingFlap() {
-        return wingFlap;
-    }
-
-    public TailFlap getTailFlap() {
-        return tailFlap;
-    }
-
-    public LandingGear getLandingGear() {
-        return landingGear;
-    }
-
-    public CabinPressure getCabinPressure() {
-        return cabinPressure;
     }
 }

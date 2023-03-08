@@ -113,8 +113,6 @@ public class WingFlap extends TimerTask {
         } catch (IOException ignored) {}
     }
 
-    // TODO: listenForEngine()
-
     public void setCurrentAltitude(Integer currentAltitude) {
         this.currentAltitude = currentAltitude;
     }

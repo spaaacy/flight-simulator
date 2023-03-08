@@ -16,7 +16,7 @@ import static org.flightcontrol.flight.Flight.*;
 public class GPS extends TimerTask {
 
     // Directions are in degrees (0-360)
-    static final String BEARING_UNIT = "°";
+    public static final String BEARING_UNIT = "°";
     public static final Integer STARTING_BEARING = 180;
     public static final Integer GPS_ACCEPTED_DIFFERENCE = 10;
     public static final int BEARING_DESTINATION = 290;

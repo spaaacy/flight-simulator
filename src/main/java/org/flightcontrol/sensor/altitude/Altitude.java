@@ -27,7 +27,7 @@ public class Altitude extends TimerTask {
 
     public static final String ALTITUDE_EXCHANGE_NAME = "AltitudeExchange";
     public static final String ALTITUDE_EXCHANGE_KEY = "AltitudeKey";
-    private static final String HEIGHT_UNIT = " m";
+    public static final String HEIGHT_UNIT = " m";
 
     Boolean isCruising = false;
     Integer currentAltitude;
@@ -70,7 +70,7 @@ public class Altitude extends TimerTask {
 
     @Override
     public void run() {
-        if (!isCruising){
+        if (!isCruising) {
             altitudeState.generateAltitude();
         }
     }

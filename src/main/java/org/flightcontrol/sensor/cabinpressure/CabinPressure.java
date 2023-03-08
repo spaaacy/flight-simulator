@@ -17,10 +17,10 @@ enum CabinPressureStatus {NORMAL, BREACHED}
 public class CabinPressure extends TimerTask {
 
     public static final String CABIN_PRESSURE_ID = "CabinPressure";
-    static final Float NORMAL_CABIN_PRESSURE = 11.5f;
+    public static final Float NORMAL_CABIN_PRESSURE = 11.5f;
     static final Float BREACHED_CABIN_PRESSURE = 8.0f;
     static final Float MAX_FLUCTUATION = 0.5f;
-    static final String PRESSURE_UNIT = " psi";
+    public static final String PRESSURE_UNIT = " psi";
     public static final String PSI_ID = "Psi";
     public static final String STATUS_ID = "Status";
     public static final String CABIN_PRESSURE_EXCHANGE_KEY = "CabinPressureKey";
