@@ -24,17 +24,7 @@ public class OxygenMask {
     Connection connection;
     Channel channel;
 
-    public void setOxygenMaskState(OxygenMaskState oxygenMaskState) {
-        this.oxygenMaskState = oxygenMaskState;
-
-        for (Observer observer : observers) {
-            observer.update(OXYGEN_MASK_ID, oxygenMaskState.toString());
-        }
-    }
-
-    /*
-     * Callback to be used by Rabbit MQ receive
-     */
+    // Callback to be used by Rabbit MQ receive
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         if (message.equals(TOGGLE_PRESSURE_FLAG)) {
@@ -47,6 +37,14 @@ public class OxygenMask {
         }
     };
 
+    public void setOxygenMaskState(OxygenMaskState oxygenMaskState) {
+        this.oxygenMaskState = oxygenMaskState;
+
+        for (Observer observer : observers) {
+            observer.update(OXYGEN_MASK_ID, oxygenMaskState.toString());
+        }
+    }
+
 
     public OxygenMask() {
         try {
@@ -56,12 +54,6 @@ public class OxygenMask {
         } catch (IOException | TimeoutException ignored) { }
 
         listenForCabinPressure();
-    }
-
-    private void receiveFlightPhase(String flightPhase) {
-        if (FLIGHT_PHASE_PARKED.equals(flightPhase)) {
-            setOxygenMaskState(OxygenMaskState.STOWED);
-        }
     }
 
     public void addObserver(Observer observer) {

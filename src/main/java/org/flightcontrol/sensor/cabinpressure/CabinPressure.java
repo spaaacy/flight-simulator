@@ -85,7 +85,6 @@ public class CabinPressure extends TimerTask {
                 timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
             }
             case FLIGHT_PHASE_LANDED -> {
-                cabinPressureState = new CabinPressureNormalState(this);
                 timer.cancel();
                 try {
                     connection.close();

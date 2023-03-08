@@ -13,7 +13,6 @@ public class CabinPressureNormalState implements CabinPressureState{
 
     @Override
     public void generatePsi() {
-
         Float fluctuation = (float) (Math.random() * MAX_FLUCTUATION * 2) - MAX_FLUCTUATION;
         Float newCabinPressure = NORMAL_CABIN_PRESSURE + fluctuation;
         cabinPressure.setCurrentCabinPressure(newCabinPressure);
