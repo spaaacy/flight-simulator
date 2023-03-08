@@ -2,6 +2,7 @@ package org.flightcontrol.actuator.landinggear;
 
 import com.rabbitmq.client.*;
 import org.flightcontrol.Observer;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;

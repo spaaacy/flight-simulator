@@ -11,9 +11,10 @@ import java.util.TimerTask;
 import java.util.concurrent.TimeoutException;
 
 import static org.flightcontrol.flight.Flight.*;
-import static org.flightcontrol.sensor.gps.GPS.*;
+import static org.flightcontrol.sensor.gps.GPS.GPS_EXCHANGE_KEY;
+import static org.flightcontrol.sensor.gps.GPS.GPS_EXCHANGE_NAME;
 
-enum TailFlapDirection {LEFT, RIGHT, NEUTRAL};
+enum TailFlapDirection {LEFT, RIGHT, NEUTRAL}
 
 public class TailFlap extends TimerTask {
 
@@ -89,8 +90,8 @@ public class TailFlap extends TimerTask {
         }
     }
 
-    public void setTailFlapDirection(TailFlapDirection tailFlapDirection) {
-        this.tailFlapDirection = tailFlapDirection;
+    public void setTailFlapDirection(TailFlapDirection newTailFlapDirection) {
+        this.tailFlapDirection = newTailFlapDirection;
         System.out.println("TailFlap: " + tailFlapDirection.toString());
         for (Observer observer : observers) {
             observer.update(TAIL_FLAP_ID, tailFlapDirection.toString());

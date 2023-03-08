@@ -1,6 +1,7 @@
 package org.flightcontrol.sensor.cabinpressure;
 
-import static org.flightcontrol.sensor.cabinpressure.CabinPressure.*;
+import static org.flightcontrol.sensor.cabinpressure.CabinPressure.BREACHED_CABIN_PRESSURE;
+import static org.flightcontrol.sensor.cabinpressure.CabinPressure.MAX_FLUCTUATION;
 
 public class CabinPressureBreachedState implements CabinPressureState{
 

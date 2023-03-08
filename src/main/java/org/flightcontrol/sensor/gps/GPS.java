@@ -10,7 +10,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeoutException;
 
-import static org.flightcontrol.actuator.tailflap.TailFlap.*;
+import static org.flightcontrol.actuator.tailflap.TailFlap.TAIL_FLAP_EXCHANGE_KEY;
+import static org.flightcontrol.actuator.tailflap.TailFlap.TAIL_FLAP_EXCHANGE_NAME;
 import static org.flightcontrol.flight.Flight.*;
 
 public class GPS extends TimerTask {
@@ -65,9 +66,7 @@ public class GPS extends TimerTask {
                 setCurrentBearing(STARTING_BEARING);
                 timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
             }
-            case FLIGHT_PHASE_TAKEOFF -> {
-                listenForTailFlap();
-            }
+            case FLIGHT_PHASE_TAKEOFF -> listenForTailFlap();
             case FLIGHT_PHASE_LANDED -> {
                 timer.cancel();
                 try {

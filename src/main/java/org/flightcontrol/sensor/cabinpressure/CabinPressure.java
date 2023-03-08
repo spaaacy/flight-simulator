@@ -106,7 +106,7 @@ public class CabinPressure extends TimerTask {
     public void setCurrentCabinPressure(Float newCabinPressure) {
         this.currentCabinPressure = newCabinPressure;
 
-        String cabinPressureString = String.format("%.2f" + PRESSURE_UNIT, newCabinPressure);
+        String cabinPressureString = String.format("%.2f" + PRESSURE_UNIT, currentCabinPressure);
         System.out.println("Cabin Pressure: " + cabinPressureString);
 
         for (Observer observer : observers) {

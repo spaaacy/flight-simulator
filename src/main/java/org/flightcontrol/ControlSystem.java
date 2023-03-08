@@ -5,8 +5,6 @@ import org.flightcontrol.flight.Flight;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -14,21 +12,17 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 import static org.flightcontrol.actuator.landinggear.LandingGear.LANDING_GEAR_ALTITUDE;
 import static org.flightcontrol.actuator.landinggear.LandingGear.LANDING_GEAR_ID;
 import static org.flightcontrol.actuator.oxygenmasks.OxygenMask.OXYGEN_MASK_ID;
 import static org.flightcontrol.actuator.tailflap.TailFlap.TAIL_FLAP_ID;
 import static org.flightcontrol.actuator.wingflap.WingFlap.WING_FLAP_ID;
-import static org.flightcontrol.flight.Flight.*;
+import static org.flightcontrol.flight.Flight.FLIGHT_ID;
 import static org.flightcontrol.sensor.altitude.Altitude.*;
 import static org.flightcontrol.sensor.cabinpressure.CabinPressure.*;
 import static org.flightcontrol.sensor.engine.Engine.*;
-import static org.flightcontrol.sensor.gps.GPS.BEARING_DESTINATION;
-import static org.flightcontrol.sensor.gps.GPS.GPS_ID;
-import static org.flightcontrol.sensor.gps.GPS.BEARING_UNIT;
+import static org.flightcontrol.sensor.gps.GPS.*;
 
 public class ControlSystem extends TimerTask implements Observer {
 
@@ -59,8 +53,6 @@ public class ControlSystem extends TimerTask implements Observer {
     }
 
 
-    // TODO: Add description column
-
     public void restartApplication()
     {
         try {
@@ -73,7 +65,7 @@ public class ControlSystem extends TimerTask implements Observer {
             }
 
             /* Build command: java -jar application.jar */
-            final ArrayList<String> command = new ArrayList<String>();
+            final ArrayList<String> command = new ArrayList<>();
             command.add(javaBin);
             command.add("-jar");
             command.add(currentJar.getPath());
@@ -257,39 +249,19 @@ public class ControlSystem extends TimerTask implements Observer {
          * Buttons
          */
         JButton takeoffButton = new JButton("Takeoff");
-        takeoffButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                flight.initiateTakeoff();
-            }
-        });
+        takeoffButton.addActionListener(e -> flight.initiateTakeoff());
         buttons.add(takeoffButton);
 
         JButton landingButton = new JButton("Land");
-        landingButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                flight.initiateLanding();
-            }
-        });
+        landingButton.addActionListener(e -> flight.initiateLanding());
         buttons.add(landingButton);
 
         JButton pressureButton = new JButton("Cabin Pressure");
-        pressureButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                flight.toggleCabinPressure();
-            }
-        });
+        pressureButton.addActionListener(e -> flight.toggleCabinPressure());
         buttons.add(pressureButton);
 
         JButton relaunchButton = new JButton("Relaunch");
-        relaunchButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                restartApplication();
-            }
-        });
+        relaunchButton.addActionListener(e -> restartApplication());
         buttons.add(relaunchButton);
 
         for (JButton button : buttons){

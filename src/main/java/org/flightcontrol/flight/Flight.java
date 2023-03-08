@@ -17,7 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.concurrent.TimeoutException;
 
-import static org.flightcontrol.sensor.altitude.Altitude.*;
+import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_EXCHANGE_NAME;
 import static org.flightcontrol.sensor.cabinpressure.CabinPressure.CABIN_PRESSURE_EXCHANGE_KEY;
 import static org.flightcontrol.sensor.cabinpressure.CabinPressure.TOGGLE_PRESSURE_FLAG;
 import static org.flightcontrol.sensor.engine.Engine.ENGINE_EXCHANGE_NAME;
@@ -39,7 +39,7 @@ public class Flight {
     public static final String FLIGHT_ID = "Flight";
     public static final String FLIGHT_EXCHANGE_NAME = "FlightExchange";
     public static final String FLIGHT_EXCHANGE_KEY = "FlightKey";
-    public static final Long TICK_RATE = 500L; // Used to control execution speed
+    public static final Long TICK_RATE = 400L; // Used to control execution speed
 
     // RabbitMQ variables
     Connection connection;

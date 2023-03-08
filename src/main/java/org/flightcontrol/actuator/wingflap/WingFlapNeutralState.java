@@ -1,6 +1,6 @@
 package org.flightcontrol.actuator.wingflap;
 
-import static org.flightcontrol.actuator.wingflap.WingFlap.*;
+import static org.flightcontrol.actuator.wingflap.WingFlap.MAX_FLUCTUATION_NEUTRAL;
 import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_ACCEPTED_DIFFERENCE;
 
 public class WingFlapNeutralState implements WingFlapState {

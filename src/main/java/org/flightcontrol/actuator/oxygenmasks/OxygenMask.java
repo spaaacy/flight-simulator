@@ -8,7 +8,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.concurrent.TimeoutException;
 
-import static org.flightcontrol.flight.Flight.*;
 import static org.flightcontrol.sensor.cabinpressure.CabinPressure.*;
 
 enum OxygenMaskState {DEPLOYED, STOWED}

@@ -32,7 +32,7 @@ public class Altitude extends TimerTask {
     Boolean isCruising = false;
     Integer currentAltitude;
     AltitudeState altitudeState;
-    LinkedList<Observer> observers = new LinkedList<>();;
+    LinkedList<Observer> observers = new LinkedList<>();
     Timer timer = new Timer();
     Boolean isEngineReady;
 

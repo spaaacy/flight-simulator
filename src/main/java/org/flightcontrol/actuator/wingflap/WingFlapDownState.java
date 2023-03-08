@@ -1,6 +1,7 @@
 package org.flightcontrol.actuator.wingflap;
 
-import static org.flightcontrol.actuator.wingflap.WingFlap.*;
+import static org.flightcontrol.actuator.wingflap.WingFlap.INCREMENT_VALUE_UP_DOWN;
+import static org.flightcontrol.actuator.wingflap.WingFlap.MAX_FLUCTUATION_UP_DOWN;
 import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_ACCEPTED_DIFFERENCE;
 
 public class WingFlapDownState implements WingFlapState {

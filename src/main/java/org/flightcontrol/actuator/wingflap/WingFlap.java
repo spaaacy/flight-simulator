@@ -41,8 +41,6 @@ public class WingFlap extends TimerTask {
     /*
      * Callback to be used by Rabbit MQ receive
      */
-    // TODO: engineCallback to react to 0 RPM
-
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         setCurrentAltitude(Integer.valueOf(message));
@@ -153,8 +151,8 @@ public class WingFlap extends TimerTask {
         observers.add(observer);
     }
 
-    public void setWingFlapDirection(WingFlapDirection wingFlapDirection) {
-        this.wingFlapDirection = wingFlapDirection;
+    public void setWingFlapDirection(WingFlapDirection newWingFlapDirection) {
+        this.wingFlapDirection = newWingFlapDirection;
         System.out.println("WingFlap: " + wingFlapDirection.toString());
         for (Observer observer : observers) {
             observer.update(WING_FLAP_ID, wingFlapDirection.toString());

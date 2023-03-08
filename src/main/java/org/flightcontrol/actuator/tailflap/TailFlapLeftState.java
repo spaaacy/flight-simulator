@@ -1,6 +1,7 @@
 package org.flightcontrol.actuator.tailflap;
 
-import static org.flightcontrol.actuator.tailflap.TailFlap.*;
+import static org.flightcontrol.actuator.tailflap.TailFlap.INCREMENT_VALUE_LEFT_RIGHT;
+import static org.flightcontrol.actuator.tailflap.TailFlap.MAX_FLUCTUATION_LEFT_RIGHT;
 import static org.flightcontrol.sensor.gps.GPS.BEARING_DESTINATION;
 import static org.flightcontrol.sensor.gps.GPS.GPS_ACCEPTED_DIFFERENCE;
 

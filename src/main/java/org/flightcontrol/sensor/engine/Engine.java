@@ -107,9 +107,7 @@ public class Engine extends TimerTask {
                 engineState = new EngineTakeoffState(this);
                 timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
             }
-            case FLIGHT_PHASE_CRUISING -> {
-                engineState = new EngineCruisingState(this);
-            }
+            case FLIGHT_PHASE_CRUISING -> engineState = new EngineCruisingState(this);
             case FLIGHT_PHASE_LANDING -> {
                 engineState = new EngineLandingState(this);
                 listenForLandedFlagFromAltitude();

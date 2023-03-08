@@ -1,6 +1,7 @@
 package org.flightcontrol.sensor.altitude;
 
-import static org.flightcontrol.sensor.altitude.Altitude.*;
+import static org.flightcontrol.sensor.altitude.Altitude.INCREMENT_TAKEOFF_LANDING;
+import static org.flightcontrol.sensor.altitude.Altitude.MAX_FLUCTUATION_TAKEOFF_LANDING;
 
 public class AltitudeLandingState implements AltitudeState  {
 
