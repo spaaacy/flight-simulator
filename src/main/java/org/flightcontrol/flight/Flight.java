@@ -39,7 +39,7 @@ public class Flight {
     public static final String FLIGHT_ID = "Flight";
     public static final String FLIGHT_EXCHANGE_NAME = "FlightExchange";
     public static final String FLIGHT_EXCHANGE_KEY = "FlightKey";
-    public static final Long TICK_RATE = 400L; // Used to control execution speed
+    public static final Long TICK_RATE = 100L; // Used to control execution speed
 
     // RabbitMQ variables
     Connection connection;

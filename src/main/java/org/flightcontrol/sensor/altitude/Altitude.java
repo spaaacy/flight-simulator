@@ -2,6 +2,7 @@ package org.flightcontrol.sensor.altitude;
 
 import com.rabbitmq.client.*;
 import org.flightcontrol.Observer;
+import org.flightcontrol.Performance;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -47,6 +48,7 @@ public class Altitude extends TimerTask {
 
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+        Performance.recordReceiveAltitude(System.currentTimeMillis());
         setCurrentAltitude(Integer.valueOf(message));
     };
 
@@ -76,6 +78,7 @@ public class Altitude extends TimerTask {
     }
 
     private void sendCurrentAltitude() {
+        Performance.recordSendAltitude(System.currentTimeMillis());
         try {
             channel.exchangeDeclare(ALTITUDE_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
             String message = currentAltitude.toString();

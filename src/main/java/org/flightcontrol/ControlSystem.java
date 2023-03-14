@@ -27,7 +27,7 @@ import static org.flightcontrol.sensor.gps.GPS.*;
 public class ControlSystem extends TimerTask implements Observer {
 
 
-    private static final String GUI_FONT = "Arial";
+    public static final String GUI_FONT = "Arial";
 
     LinkedList<JPanel> panels = new LinkedList<>();
     LinkedList<JLabel> labels = new LinkedList<>();
@@ -50,6 +50,8 @@ public class ControlSystem extends TimerTask implements Observer {
         ControlSystem controlSystem = new ControlSystem();
         Timer timer = new Timer();
         timer.schedule(controlSystem, 0L, 2000L);
+
+        Performance.gui();
     }
 
 
@@ -243,6 +245,7 @@ public class ControlSystem extends TimerTask implements Observer {
             }
 
             labelPanel.add(label);
+
         }
 
         /*
