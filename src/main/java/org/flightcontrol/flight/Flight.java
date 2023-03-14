@@ -3,6 +3,7 @@ package org.flightcontrol.flight;
 import com.rabbitmq.client.*;
 import org.flightcontrol.ControlSystem;
 import org.flightcontrol.Observer;
+import org.flightcontrol.Performance;
 import org.flightcontrol.actuator.landinggear.LandingGear;
 import org.flightcontrol.actuator.oxygenmasks.OxygenMask;
 import org.flightcontrol.actuator.tailflap.TailFlap;
@@ -39,7 +40,7 @@ public class Flight {
     public static final String FLIGHT_ID = "Flight";
     public static final String FLIGHT_EXCHANGE_NAME = "FlightExchange";
     public static final String FLIGHT_EXCHANGE_KEY = "FlightKey";
-    public static final Long TICK_RATE = 250L; // Used to control execution speed
+    public static final Long TICK_RATE = 100L; // Used to control execution speed
 
     // RabbitMQ variables
     Connection connection;
@@ -134,6 +135,7 @@ public class Flight {
     }
 
     private void sendNewFlightPhase(String newPhase) {
+        Performance.recordSendFlight();
         try {
             channel.exchangeDeclare(FLIGHT_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
             channel.basicPublish(FLIGHT_EXCHANGE_NAME, FLIGHT_EXCHANGE_KEY, null, newPhase.getBytes());

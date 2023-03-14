@@ -2,6 +2,7 @@ package org.flightcontrol.actuator.oxygenmasks;
 
 import com.rabbitmq.client.*;
 import org.flightcontrol.Observer;
+import org.flightcontrol.Performance;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -25,6 +26,7 @@ public class OxygenMask {
 
     // Callback to be used by Rabbit MQ receive
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+        Performance.recordReceiveCabinPressure();
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         if (message.equals(TOGGLE_PRESSURE_FLAG)) {
             if (oxygenMaskState == null ||

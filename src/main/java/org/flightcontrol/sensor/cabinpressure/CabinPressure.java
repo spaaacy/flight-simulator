@@ -2,6 +2,7 @@ package org.flightcontrol.sensor.cabinpressure;
 
 import com.rabbitmq.client.*;
 import org.flightcontrol.Observer;
+import org.flightcontrol.Performance;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -72,6 +73,7 @@ public class CabinPressure extends TimerTask {
     }
 
     private void sendCabinPressure() {
+        Performance.recordSendCabinPressure();
         try {
             channel.exchangeDeclare(CABIN_PRESSURE_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
             channel.basicPublish(CABIN_PRESSURE_EXCHANGE_NAME, CABIN_PRESSURE_EXCHANGE_KEY, null, TOGGLE_PRESSURE_FLAG.getBytes());

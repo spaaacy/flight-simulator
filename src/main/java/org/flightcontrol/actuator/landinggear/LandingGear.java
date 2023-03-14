@@ -2,6 +2,7 @@ package org.flightcontrol.actuator.landinggear;
 
 import com.rabbitmq.client.*;
 import org.flightcontrol.Observer;
+import org.flightcontrol.Performance;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -35,6 +36,7 @@ public class LandingGear {
     };
 
     DeliverCallback altitudeCallback = (consumerTag, delivery) -> {
+        Performance.recordReceiveLandingGear();
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         receiveAltitude(Integer.valueOf(message));
     };
