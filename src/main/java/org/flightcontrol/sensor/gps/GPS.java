@@ -2,6 +2,7 @@ package org.flightcontrol.sensor.gps;
 
 import com.rabbitmq.client.*;
 import org.flightcontrol.Observer;
+import org.flightcontrol.Performance;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -38,6 +39,7 @@ public class GPS extends TimerTask {
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         setCurrentBearing(Integer.valueOf(message));
+        Performance.recordReceiveGps();
     };
     DeliverCallback flightCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
@@ -97,6 +99,7 @@ public class GPS extends TimerTask {
     }
 
     private void sendCurrentDirection() {
+        Performance.recordSendGps();
         try {
             channel.exchangeDeclare(GPS_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
             String message = currentBearing.toString();

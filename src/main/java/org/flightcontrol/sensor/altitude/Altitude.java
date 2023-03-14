@@ -47,8 +47,8 @@ public class Altitude extends TimerTask {
     };
 
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+        Performance.recordReceiveAltitude();
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-        Performance.recordReceiveAltitude(System.currentTimeMillis());
         setCurrentAltitude(Integer.valueOf(message));
     };
 
@@ -78,7 +78,7 @@ public class Altitude extends TimerTask {
     }
 
     private void sendCurrentAltitude() {
-        Performance.recordSendAltitude(System.currentTimeMillis());
+        Performance.recordSendAltitude();
         try {
             channel.exchangeDeclare(ALTITUDE_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
             String message = currentAltitude.toString();

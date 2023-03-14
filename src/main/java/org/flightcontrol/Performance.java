@@ -16,14 +16,20 @@ public class Performance {
     private static Long averageAltitude = 0L;
     private static JLabel altitudeLatency = new JLabel();
 
-    private static LinkedList<JLabel> labels = new LinkedList<>();
+    private static ArrayList<Long> sendGpsTimestamps = new ArrayList<>();
+    private static ArrayList<Long> receiveGpsTimestamps = new ArrayList<>();
+    private static int gpsCount = 0;
+    private static Long averageGps = 0L;
 
-    public static void recordSendAltitude(Long altitude) {
-        sendAltitudeTimestamps.add(altitude);
+    private static LinkedList<JLabel> labels = new LinkedList<>();
+    private static JLabel gpsLatency = new JLabel();
+
+    public static void recordSendAltitude() {
+        sendAltitudeTimestamps.add(System.currentTimeMillis());
     }
 
-    public static void recordReceiveAltitude(Long wingFlap) {
-        receiveAltitudeTimestamps.add(wingFlap);
+    public static void recordReceiveAltitude() {
+        receiveAltitudeTimestamps.add(System.currentTimeMillis());
         averageAltitudeLatency();
     }
 
@@ -31,11 +37,33 @@ public class Performance {
         Long value1 = sendAltitudeTimestamps.get(sendAltitudeTimestamps.size() - 1);
         Long value2 = receiveAltitudeTimestamps.get(receiveAltitudeTimestamps.size() - 1);
         Long difference = value2 - value1;
+
         Long newAverage = averageAltitude*altitudeCount + difference;
         altitudeCount++;
         newAverage = newAverage/altitudeCount;
         averageAltitude = newAverage;
+
         altitudeLatency.setText(averageAltitude + " ms");
+    }
+
+    public static void recordSendGps() {
+        sendGpsTimestamps.add(System.currentTimeMillis());
+    }
+
+    public static void recordReceiveGps() {
+        receiveGpsTimestamps.add(System.currentTimeMillis());
+        averageGpsLatency();
+    }
+
+    private static void averageGpsLatency() {
+        Long value1 = sendGpsTimestamps.get(sendGpsTimestamps.size() - 1);
+        Long value2 = receiveGpsTimestamps.get(receiveGpsTimestamps.size() - 1);
+        Long difference = value2 - value1;
+        Long newAverage = averageGps*gpsCount + difference;
+        gpsCount++;
+        newAverage = newAverage/gpsCount;
+        averageGps = newAverage;
+        gpsLatency.setText(averageGps + " ms");
     }
 
     public static void gui() {
@@ -44,7 +72,7 @@ public class Performance {
         JPanel mainPanel = new JPanel(new BorderLayout());
         Border border = BorderFactory.createEmptyBorder(25,25,25,25);
         mainPanel.setBorder(border);
-        JPanel labelPanel = new JPanel(new GridLayout(1,1));
+        JPanel labelPanel = new JPanel(new GridLayout(2,2));
         JPanel titlePanel = new JPanel(new FlowLayout());
         JLabel title = new JLabel("Performance");
         title.setFont(new Font(GUI_FONT, Font.BOLD, 25));
@@ -57,6 +85,10 @@ public class Performance {
         JLabel altitudeLabel = new JLabel("Altitude latency");
         labels.add(altitudeLabel);
         labels.add(altitudeLatency);
+
+        JLabel gpsLabel = new JLabel("GPS latency");
+        labels.add(gpsLabel);
+        labels.add(gpsLatency);
 
         for (JLabel label: labels) {
             labelPanel.add(label);
