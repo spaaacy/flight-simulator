@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 import static org.flightcontrol.flight.Flight.*;
 import static org.flightcontrol.sensor.gps.GPS.GPS_EXCHANGE_KEY;
@@ -17,7 +17,9 @@ import static org.flightcontrol.sensor.gps.GPS.GPS_EXCHANGE_NAME;
 
 enum TailFlapDirection {LEFT, RIGHT, NEUTRAL}
 
-public class TailFlap extends TimerTask {
+public class TailFlap implements Runnable {
+    ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+    ScheduledFuture<?> scheduledFuture;
 
     public static final String TAIL_FLAP_ID = "TailFlapNeutralState";
     public static final String TAIL_FLAP_EXCHANGE_NAME = "TailFlapExchange";
@@ -75,7 +77,7 @@ public class TailFlap extends TimerTask {
             case FLIGHT_PHASE_TAKEOFF -> {
                 isTakingOffOrLanding = true;
                 tailFlapState = new TailFlapNeutralState(this);
-                timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
+                scheduledFuture = scheduledExecutorService.scheduleAtFixedRate(this, 0L, TICK_RATE, TimeUnit.MILLISECONDS);
             }
             case FLIGHT_PHASE_CRUISING -> isTakingOffOrLanding = false;
             case FLIGHT_PHASE_LANDING -> {
@@ -83,7 +85,8 @@ public class TailFlap extends TimerTask {
                 tailFlapState = new TailFlapNeutralState(this);
             }
             case FLIGHT_PHASE_LANDED -> {
-                timer.cancel();
+//                timer.cancel();
+                scheduledFuture.cancel(false);
                 try {
                     connection.close();
                 } catch (IOException ignored) {

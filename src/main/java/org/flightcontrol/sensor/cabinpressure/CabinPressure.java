@@ -9,13 +9,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 import static org.flightcontrol.flight.Flight.*;
 
 enum CabinPressureStatus {NORMAL, BREACHED}
 
-public class CabinPressure extends TimerTask {
+public class CabinPressure implements Runnable {
+    ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+    ScheduledFuture<?> scheduledFuture;
 
     public static final String CABIN_PRESSURE_ID = "CabinPressure";
     public static final Float NORMAL_CABIN_PRESSURE = 11.5f;
@@ -85,10 +87,11 @@ public class CabinPressure extends TimerTask {
         switch (flightPhase) {
             case FLIGHT_PHASE_PARKED -> {
                 cabinPressureState = new CabinPressureNormalState(this);
-                timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
+                scheduledFuture = scheduledExecutorService.scheduleAtFixedRate(this, 0L, TICK_RATE, TimeUnit.MILLISECONDS);
             }
             case FLIGHT_PHASE_LANDED -> {
-                timer.cancel();
+//                timer.cancel();
+                scheduledFuture.cancel(false);
                 try {
                     connection.close();
                 } catch (IOException ignored) {}

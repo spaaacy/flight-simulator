@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 import static org.flightcontrol.actuator.wingflap.WingFlap.WING_FLAP_EXCHANGE_KEY;
 import static org.flightcontrol.actuator.wingflap.WingFlap.WING_FLAP_EXCHANGE_NAME;
@@ -17,7 +17,9 @@ import static org.flightcontrol.flight.Flight.*;
 import static org.flightcontrol.sensor.engine.Engine.ENGINE_EXCHANGE_KEY;
 import static org.flightcontrol.sensor.engine.Engine.ENGINE_EXCHANGE_NAME;
 
-public class Altitude extends TimerTask {
+public class Altitude implements Runnable {
+    ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+    ScheduledFuture<?> scheduledFuture;
 
     public static final String ALTITUDE_ID = "Altitude";
     static final Integer INCREMENT_TAKEOFF_LANDING = 500;
@@ -97,7 +99,7 @@ public class Altitude extends TimerTask {
             case FLIGHT_PHASE_TAKEOFF -> {
                 listenForTakeoffFlagFromEngine();
                 altitudeState = new AltitudeTakeoffState(this);
-                timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
+                scheduledFuture = scheduledExecutorService.scheduleAtFixedRate(this, 0L, TICK_RATE, TimeUnit.MILLISECONDS);
             }
             case FLIGHT_PHASE_CRUISING -> {
                 isCruising = true;
@@ -108,6 +110,7 @@ public class Altitude extends TimerTask {
                 altitudeState = new AltitudeLandingState(this);
             }
             case FLIGHT_PHASE_LANDED -> {
+                scheduledFuture.cancel(false);
                 try {
                     connection.close();
                 } catch (IOException ignored) {}

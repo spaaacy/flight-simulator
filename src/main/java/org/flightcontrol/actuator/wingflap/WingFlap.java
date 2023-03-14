@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 import static org.flightcontrol.flight.Flight.*;
 import static org.flightcontrol.sensor.altitude.Altitude.*;
@@ -17,7 +17,9 @@ import static org.flightcontrol.sensor.cabinpressure.CabinPressure.*;
 
 enum WingFlapDirection {UP, DOWN, NEUTRAL}
 
-public class WingFlap extends TimerTask {
+public class WingFlap implements Runnable {
+    ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+    ScheduledFuture<?> scheduledFuture;
 
     public static final String WING_FLAP_EXCHANGE_NAME = "WingFlapExchange";
     public static final String WING_FLAP_EXCHANGE_KEY = "WingFlapKey";
@@ -133,10 +135,11 @@ public class WingFlap extends TimerTask {
                 listenForCabinPressure();
                 listenForAltitude();
                 wingFlapState = new WingFlapNeutralState(this);
-                timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
+                scheduledFuture = scheduledExecutorService.scheduleAtFixedRate(this, 0L, TICK_RATE, TimeUnit.MILLISECONDS);
             }
             case FLIGHT_PHASE_LANDING -> {
-                timer.cancel();
+//                timer.cancel();
+                scheduledFuture.cancel(false);
                 setWingFlapDirection(WingFlapDirection.UP);
             }
             case FLIGHT_PHASE_LANDED -> {

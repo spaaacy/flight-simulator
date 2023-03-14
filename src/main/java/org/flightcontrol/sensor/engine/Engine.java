@@ -9,13 +9,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 import static org.flightcontrol.flight.Flight.*;
 import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_EXCHANGE_KEY;
 import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_EXCHANGE_NAME;
 
-public class Engine extends TimerTask {
+public class Engine implements Runnable {
+    ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+    ScheduledFuture<?> scheduledFuture;
 
     public static final String ENGINE_ID = "Engine";
     public static final String PERCENTAGE_UNIT = "%";
@@ -109,7 +111,7 @@ public class Engine extends TimerTask {
             }
             case FLIGHT_PHASE_TAKEOFF -> {
                 engineState = new EngineTakeoffState(this);
-                timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
+                scheduledFuture = scheduledExecutorService.scheduleAtFixedRate(this, 0L, TICK_RATE, TimeUnit.MILLISECONDS);
             }
             case FLIGHT_PHASE_CRUISING -> engineState = new EngineCruisingState(this);
             case FLIGHT_PHASE_LANDING -> {
@@ -117,7 +119,8 @@ public class Engine extends TimerTask {
                 listenForLandedFlagFromAltitude();
             }
             case FLIGHT_PHASE_LANDED -> {
-                timer.cancel();
+//                timer.cancel();
+                scheduledFuture.cancel(false);
                 try {
                     connection.close();
                 } catch (IOException ignored) {}

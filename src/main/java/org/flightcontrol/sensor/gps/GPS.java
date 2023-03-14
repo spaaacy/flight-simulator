@@ -9,13 +9,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 import static org.flightcontrol.actuator.tailflap.TailFlap.TAIL_FLAP_EXCHANGE_KEY;
 import static org.flightcontrol.actuator.tailflap.TailFlap.TAIL_FLAP_EXCHANGE_NAME;
 import static org.flightcontrol.flight.Flight.*;
 
-public class GPS extends TimerTask {
+public class GPS implements Runnable {
+    ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+    ScheduledFuture<?> scheduledFuture;
 
     // Directions are in degrees (0-360)
     public static final String BEARING_UNIT = "°";
@@ -67,11 +69,11 @@ public class GPS extends TimerTask {
         switch (flightPhase) {
             case FLIGHT_PHASE_PARKED -> {
                 setCurrentBearing(STARTING_BEARING);
-                timer.scheduleAtFixedRate(this, 0L, TICK_RATE);
+                scheduledFuture = scheduledExecutorService.scheduleAtFixedRate(this, 0L, TICK_RATE, TimeUnit.MILLISECONDS);
             }
             case FLIGHT_PHASE_TAKEOFF -> listenForTailFlap();
             case FLIGHT_PHASE_LANDED -> {
-                timer.cancel();
+                scheduledFuture.cancel(false);
                 try {
                     connection.close();
                 } catch (IOException ignored) {
