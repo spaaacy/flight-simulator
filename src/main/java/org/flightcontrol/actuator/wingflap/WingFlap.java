@@ -2,6 +2,7 @@ package org.flightcontrol.actuator.wingflap;
 
 import com.rabbitmq.client.*;
 import org.flightcontrol.Observer;
+import org.flightcontrol.Performance;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -47,6 +48,7 @@ public class WingFlap extends TimerTask {
     };
 
     DeliverCallback flightCallback = (consumerTag, delivery) -> {
+        Performance.recordReceiveFlightWingFlap();
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         receiveFlightPhase(message);
     };

@@ -2,6 +2,7 @@ package org.flightcontrol.sensor.engine;
 
 import com.rabbitmq.client.*;
 import org.flightcontrol.Observer;
+import org.flightcontrol.Performance;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -39,11 +40,13 @@ public class Engine extends TimerTask {
      * Callback to be used by Rabbit MQ receive
      */
     DeliverCallback flightCallback = (consumerTag, delivery) -> {
+        Performance.recordReceiveFlightEngine();
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         receiveFlightPhase(message);
     };
 
     DeliverCallback altitudeCallback = (consumerTag, delivery) -> {
+        Performance.recordReceiveEngine();
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         if (message.equals(LANDING_FLAG)) {
             isAltitudeZero = true;
@@ -82,6 +85,7 @@ public class Engine extends TimerTask {
     }
 
     public void sendTakeoffFlagToAltitude() {
+        Performance.recordSendEngine();
         try {
             channel.exchangeDeclare(ALTITUDE_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
             channel.basicPublish(ALTITUDE_EXCHANGE_NAME, ENGINE_EXCHANGE_KEY, null, TAKEOFF_FLAG.getBytes());

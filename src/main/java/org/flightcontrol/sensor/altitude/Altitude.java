@@ -42,6 +42,7 @@ public class Altitude extends TimerTask {
     Channel channel;
 
     DeliverCallback flightCallback = (consumerTag, delivery) -> {
+        Performance.recordReceiveFlightAltitude();
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         receiveFlightPhase(message);
     };
@@ -53,6 +54,7 @@ public class Altitude extends TimerTask {
     };
 
     DeliverCallback engineCallback = (consumerTag, delivery) -> {
+        Performance.recordReceiveEngine();
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         if (message.equals(TAKEOFF_FLAG)) {
             isEngineReady = true;
@@ -139,6 +141,7 @@ public class Altitude extends TimerTask {
     }
 
     public void sendLandedFlagToEngine() {
+        Performance.recordSendEngine();
         try {
             channel.exchangeDeclare(ENGINE_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
             channel.basicPublish(ENGINE_EXCHANGE_NAME, ALTITUDE_EXCHANGE_KEY, null, LANDING_FLAG.getBytes());

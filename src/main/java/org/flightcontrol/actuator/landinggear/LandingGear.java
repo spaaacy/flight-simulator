@@ -31,6 +31,7 @@ public class LandingGear {
      * Callback to be used by Rabbit MQ receive
      */
     DeliverCallback flightCallback = (consumerTag, delivery) -> {
+        Performance.recordReceiveFlightLandingGear();
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         receiveFlightPhase(message);
     };

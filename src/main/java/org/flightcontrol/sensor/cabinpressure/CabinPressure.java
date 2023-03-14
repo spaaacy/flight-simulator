@@ -52,6 +52,7 @@ public class CabinPressure extends TimerTask {
     };
 
     DeliverCallback flightCallback = (consumerTag, delivery) -> {
+        Performance.recordReceiveFlightCabinPressure();
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         receiveFlightPhase(message);
     };

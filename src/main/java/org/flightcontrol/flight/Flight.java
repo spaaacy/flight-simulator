@@ -16,6 +16,10 @@ import org.flightcontrol.sensor.gps.GPS;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
+import java.util.Scanner;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.flightcontrol.sensor.altitude.Altitude.ALTITUDE_EXCHANGE_NAME;
@@ -40,7 +44,12 @@ public class Flight {
     public static final String FLIGHT_ID = "Flight";
     public static final String FLIGHT_EXCHANGE_NAME = "FlightExchange";
     public static final String FLIGHT_EXCHANGE_KEY = "FlightKey";
-    public static final Long TICK_RATE = 100L; // Used to control execution speed
+    public static final Long TICK_RATE = 250L; // Used to control execution speed
+
+    // Benchmarking purposes
+    ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
+    Scanner scanner = new Scanner(System.in);
+
 
     // RabbitMQ variables
     Connection connection;
@@ -55,12 +64,20 @@ public class Flight {
             setFlightPhase(FLIGHT_PHASE_LANDED);
             connection.close();
         }
+//        System.exit(0);
     };
 
     DeliverCallback altitudeCallback = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         if (CRUISING_FLAG.equals(message)) {
             setFlightPhase(FLIGHT_PHASE_CRUISING);
+
+            // Benchmarking purposes
+//            scanner.nextLine();
+            scheduledExecutorService.schedule(this::toggleCabinPressure, 5L, TimeUnit.SECONDS);
+            scheduledExecutorService.schedule(this::toggleCabinPressure, 10L, TimeUnit.SECONDS);
+            scheduledExecutorService.schedule(this::initiateLanding, 15L, TimeUnit.SECONDS);
+
         }
     };
 
@@ -99,7 +116,15 @@ public class Flight {
 
         listenForCruisingFlagFromAltitude();
         listenForLandedFlagFromEngine();
+
         setFlightPhase(FLIGHT_PHASE_PARKED);
+
+        // Benchmarking purposes
+//        scanner.nextLine();
+//        setFlightPhase(FLIGHT_PHASE_TAKEOFF);
+        Runnable takeoff = () -> setFlightPhase(FLIGHT_PHASE_TAKEOFF);
+        scheduledExecutorService.schedule(takeoff, 5L ,TimeUnit.SECONDS);
+
     }
 
     private void setFlightPhase(String flightPhase) {

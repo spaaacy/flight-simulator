@@ -2,6 +2,7 @@ package org.flightcontrol.actuator.tailflap;
 
 import com.rabbitmq.client.*;
 import org.flightcontrol.Observer;
+import org.flightcontrol.Performance;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -45,6 +46,7 @@ public class TailFlap extends TimerTask {
         currentBearing = Integer.valueOf(message);
     };
     DeliverCallback flightCallback = (consumerTag, delivery) -> {
+        Performance.recordReceiveFlightTailFlap();
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         receiveFlightPhase(message);
     };

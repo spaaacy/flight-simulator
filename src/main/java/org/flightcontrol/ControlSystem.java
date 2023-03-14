@@ -48,8 +48,10 @@ public class ControlSystem extends TimerTask implements Observer {
 
     public static void main(String[] args) {
         ControlSystem controlSystem = new ControlSystem();
-        Timer timer = new Timer();
-        timer.schedule(controlSystem, 0L, 2000L);
+
+        // Disabled for benchmarking
+//        Timer timer = new Timer();
+//        timer.schedule(controlSystem, 0L, 2000L);
 
         Performance.gui();
     }
@@ -144,12 +146,15 @@ public class ControlSystem extends TimerTask implements Observer {
     }
 
     ControlSystem() {
+        /*
+        * Disabled for benchmarking
+        *
         JFrame jFrame = new JFrame("Flight Control System");
         jFrame.setSize(900, 750);
 
-        /*
+        *//*
         * Panels
-        * */
+        * *//*
         JPanel mainPanel = new JPanel(new BorderLayout());
         Border border = BorderFactory.createEmptyBorder(25,25,25,25);
         mainPanel.setBorder(border);
@@ -164,9 +169,9 @@ public class ControlSystem extends TimerTask implements Observer {
             panel.setBackground(Color.LIGHT_GRAY);
         }
 
-        /*
+        *//*
          * Labels
-         * */
+         * *//*
         JLabel title = new JLabel("Boeing 777 Control System");
         title.setForeground(Color.RED);
         title.setFont(new Font("Arial", Font.BOLD, 30));
@@ -248,9 +253,9 @@ public class ControlSystem extends TimerTask implements Observer {
 
         }
 
-        /*
+        *//*
          * Buttons
-         */
+         *//*
         JButton takeoffButton = new JButton("Takeoff");
         takeoffButton.addActionListener(e -> flight.initiateTakeoff());
         buttons.add(takeoffButton);
@@ -277,8 +282,7 @@ public class ControlSystem extends TimerTask implements Observer {
         mainPanel.add(buttonPanel, BorderLayout.PAGE_END);
         jFrame.add(mainPanel);
         jFrame.setVisible(true);
-
-
+        */
     }
 
 }

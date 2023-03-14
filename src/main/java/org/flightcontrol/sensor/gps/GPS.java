@@ -42,6 +42,7 @@ public class GPS extends TimerTask {
         setCurrentBearing(Integer.valueOf(message));
     };
     DeliverCallback flightCallback = (consumerTag, delivery) -> {
+        Performance.recordReceiveFlightGps();
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         receiveFlightPhase(message);
     };
