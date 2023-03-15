@@ -118,6 +118,7 @@ public class WingFlap extends TimerTask {
     }
 
     protected void sendNewAltitude(Integer newAltitude) {
+        Performance.recordSendAltitude();
         try {
             channel.exchangeDeclare(WING_FLAP_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
             String message = newAltitude.toString();

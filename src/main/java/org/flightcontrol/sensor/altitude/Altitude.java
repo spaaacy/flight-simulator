@@ -80,7 +80,7 @@ public class Altitude extends TimerTask {
     }
 
     private void sendCurrentAltitude() {
-        Performance.recordSendAltitude();
+        Performance.recordSendLandingGear();
         try {
             channel.exchangeDeclare(ALTITUDE_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
             String message = currentAltitude.toString();
