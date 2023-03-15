@@ -22,7 +22,7 @@ public class Performance {
     private static int gpsCount = 0;
     private static Long averageGps = 0L;
 
-    // GPS
+    // Engine
     private static ArrayList<Long> sendEngineTimestamps = new ArrayList<>();
     private static ArrayList<Long> receiveEngineTimestamps = new ArrayList<>();
     private static int engineCount = 0;
@@ -32,12 +32,13 @@ public class Performance {
     private static ArrayList<Long> sendCabinPressureTimestamps = new ArrayList<>();
     private static ArrayList<Long> receiveCabinPressureTimestamps = new ArrayList<>();
     private static int cabinPressureCount = 0;
+    private static Long averageCabinPressure = 0L;
 
     // Landing Gear
+    private static ArrayList<Long> sendLandingGearTimestamps = new ArrayList<>();
     private static ArrayList<Long> receiveLandingGearTimestamps = new ArrayList<>();
     private static int landingGearCount = 0;
     private static Long averageLandingGear = 0L;
-    private static Long averageCabinPressure = 0L;
 
     // Flight
     private static ArrayList<Long> sendFlightTimestamps = new ArrayList<>();
@@ -130,17 +131,20 @@ public class Performance {
         averageCabinPressure = calculateAverageLatency(sendCabinPressureTimestamps, receiveCabinPressureTimestamps,
                 averageCabinPressure, cabinPressureCount, cabinPressureLatency) ;
     }
+    public static void recordSendLandingGear() {
+        sendLandingGearTimestamps.add(System.currentTimeMillis());
+    }
 
     public static void recordReceiveLandingGear() {
         receiveLandingGearTimestamps.add(System.currentTimeMillis());
-        averageLandingGear = calculateAverageLatency(sendAltitudeTimestamps, receiveLandingGearTimestamps,
+        averageLandingGear = calculateAverageLatency(sendLandingGearTimestamps, receiveLandingGearTimestamps,
                 averageLandingGear, landingGearCount, landingGearLatency);
     }
 
 
     /*
-    * Flight functions
-    * */
+     * Flight functions
+     * */
     public static void recordSendFlight() {
         sendFlightTimestamps.add(System.currentTimeMillis());
     }
@@ -189,11 +193,11 @@ public class Performance {
 
     public static void gui() {
         JFrame jFrame = new JFrame("Performance");
-        jFrame.setSize(400, 400);
+        jFrame.setSize(600, 400);
         JPanel mainPanel = new JPanel(new BorderLayout());
         Border border = BorderFactory.createEmptyBorder(25, 25, 25, 25);
         mainPanel.setBorder(border);
-        JPanel labelPanel = new JPanel(new GridLayout(8, 3));
+        JPanel labelPanel = new JPanel(new GridLayout(8, 4));
         JPanel titlePanel = new JPanel(new FlowLayout());
         JLabel title = new JLabel("Performance");
         title.setFont(new Font(GUI_FONT, Font.BOLD, 25));
@@ -206,43 +210,55 @@ public class Performance {
 
         labels.add(new JLabel(""));
         labels.add(new JLabel("<html>Inter-Object<br>Latency"));
+        labels.add(new JLabel(""));
         labels.add(new JLabel("<html>Flight-Object<br>Latency"));
 
-        JLabel altitudeLabel = new JLabel("Altitude:");
+        JLabel altitudeLabel = new JLabel("Wing Flaps-Altitude:");
         labels.add(altitudeLabel);
         labels.add(altitudeLatency);
+        JLabel flightAltitudeLabel = new JLabel("Altitude:");
+        labels.add(flightAltitudeLabel);
         labels.add(flightAltitudeLatency);
 
-        JLabel gpsLabel = new JLabel("GPS:");
+        JLabel gpsLabel = new JLabel("GPS-Tail Flaps:");
         labels.add(gpsLabel);
         labels.add(gpsLatency);
+        JLabel flightGpsLabel = new JLabel("GPS:");
+        labels.add(flightGpsLabel);
         labels.add(flightGpsLatency);
 
-        JLabel engineLabel = new JLabel("Engine:");
+        JLabel engineLabel = new JLabel("Engine-Altitude:");
         labels.add(engineLabel);
         labels.add(engineLatency);
+        JLabel flightEngineLabel = new JLabel("Engine:");
+        labels.add(flightEngineLabel);
         labels.add(flightEngineLatency);
 
-        JLabel wingFlapLabel = new JLabel("Wing Flap:");
-        labels.add(wingFlapLabel);
-        labels.add(new JLabel("-"));
-        labels.add(flightWingFlapLatency);
-
-        JLabel tailFlapLabel = new JLabel("Tail Flap:");
-        labels.add(tailFlapLabel);
-        labels.add(new JLabel("-"));
-        labels.add(flightTailFlapLatency);
-
-
-        JLabel cabinPressureLabel = new JLabel("Cabin Pressure:");
+        JLabel cabinPressureLabel = new JLabel("<html>Cabin Pressure-<br>Oxygen Masks:");
         labels.add(cabinPressureLabel);
         labels.add(cabinPressureLatency);
+        JLabel flightCabinPressureLabel = new JLabel("Cabin Pressure:");
+        labels.add(flightCabinPressureLabel);
         labels.add(flightCabinPressureLatency);
 
-        JLabel landingGearLabel = new JLabel("Landing Gear:");
+        JLabel landingGearLabel = new JLabel("Altitude-Landing Gear:");
         labels.add(landingGearLabel);
         labels.add(landingGearLatency);
+        JLabel flightLandingGearLabel = new JLabel("Landing Gear:");
+        labels.add(flightLandingGearLabel);
         labels.add(flightLandingGearLatency);
+
+        labels.add(new JLabel(""));
+        labels.add(new JLabel(""));
+        JLabel flightWingFlapLabel = new JLabel("Wing Flap:");
+        labels.add(flightWingFlapLabel);
+        labels.add(flightWingFlapLatency);
+
+        labels.add(new JLabel(""));
+        labels.add(new JLabel(""));
+        JLabel flightTailFlapLabel = new JLabel("Tail Flap:");
+        labels.add(flightTailFlapLabel);
+        labels.add(flightTailFlapLatency);
 
         for (JLabel label : labels) {
             labelPanel.add(label);

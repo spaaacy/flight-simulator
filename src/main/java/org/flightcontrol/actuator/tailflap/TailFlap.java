@@ -44,6 +44,7 @@ public class TailFlap implements Runnable {
 
     // Callback to be used by Rabbit MQ receive
     DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+        Performance.recordReceiveGps();
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         currentBearing = Integer.valueOf(message);
     };

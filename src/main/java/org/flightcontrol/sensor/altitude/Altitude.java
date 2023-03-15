@@ -82,7 +82,7 @@ public class Altitude implements Runnable {
     }
 
     private void sendCurrentAltitude() {
-        Performance.recordSendAltitude();
+        Performance.recordSendLandingGear();
         try {
             channel.exchangeDeclare(ALTITUDE_EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
             String message = currentAltitude.toString();
