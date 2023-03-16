@@ -24,7 +24,7 @@ public class TailFlap extends TimerTask {
 
     static final Integer MAX_FLUCTUATION_LEFT_RIGHT = 2;
     static final Integer MAX_FLUCTUATION_NEUTRAL = 20;
-    static final Integer FLUCTUATION_OFF_COURSE = 5;
+    static final Integer FLUCTUATION_OFF_COURSE = 1;
     static final Integer INCREMENT_VALUE_LEFT_RIGHT = 5;
 
     Timer timer = new Timer();
